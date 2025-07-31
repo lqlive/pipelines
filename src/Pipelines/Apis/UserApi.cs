@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 using Pipelines.Core.Entities.Users;
+using Pipelines.Extensions;
+using Pipelines.Models.Users;
+using Pipelines.Services;
 
 public static class UserApi
 {
@@ -11,24 +14,36 @@ public static class UserApi
     {
         var api = app.MapGroup("api/users");
 
-
-
+        api.MapPost("/login", Login);
+        api.MapPost("/logout", Logout);
         return api;
     }
-    private static async Task<Ok> Login(HttpContext context)
+    private static async Task<Results<Ok, ProblemHttpResult>> Login(
+          HttpContext context,
+          LoginRequest request,
+          UserService userService,
+          CancellationToken cancellationToken)
     {
+        var result = await userService.LoginAsync(request,cancellationToken);
+
+        if (result.IsError)
+        {
+            return result.Errors.HandleErrors();
+        }
+
+        var userResponse = result.Value;
+
+        await SignInUserAsync(context, userResponse);
+        return TypedResults.Ok();
+    }
+    private static async Task<Results<Ok, ProblemHttpResult>> Logout(HttpContext context, CancellationToken cancellationToken)
+    {
+
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return TypedResults.Ok();
     }
 
-    private static async Task<Ok> Logout(HttpContext context)
-    {
-
-        await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return TypedResults.Ok();
-    }
-
-    private static async Task SignInUserAsync(HttpContext context, User user)
+    private static async Task SignInUserAsync(HttpContext context, UserResponse user)
     {
         var claims = new List<Claim>
         {
