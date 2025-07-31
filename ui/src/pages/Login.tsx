@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   RocketLaunchIcon,
   EyeIcon,
@@ -30,7 +30,6 @@ interface LoginForm {
 }
 
 const Login: React.FC = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -372,6 +371,19 @@ const Login: React.FC = () => {
               ))}
             </div>
           )}
+
+          {/* Register Link */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                Create one here
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Footer */}

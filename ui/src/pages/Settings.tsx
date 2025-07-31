@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import {
   Cog6ToothIcon,
-  UserIcon,
-  BellIcon,
-  ShieldCheckIcon,
-  ServerIcon,
+  PuzzlePieceIcon,
+  LinkIcon,
+  DocumentArrowDownIcon,
+  PlayIcon,
 } from '@heroicons/react/24/outline';
-import type { Settings as SettingsType } from '../types';
 
-type TabId = 'general' | 'notifications' | 'security' | 'server';
+type TabId = 'system' | 'runners' | 'integrations' | 'plugins' | 'backup';
 
 interface Tab {
   id: TabId;
@@ -17,46 +16,39 @@ interface Tab {
 }
 
 const Settings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>('general');
-  const [settings, setSettings] = useState<SettingsType>({
-    general: {
-      language: 'en-US',
-      timezone: 'UTC',
-      theme: 'light',
+  const [activeTab, setActiveTab] = useState<TabId>('system');
+  const [settings, setSettings] = useState({
+    system: {
+      maxConcurrentBuilds: '10',
+      defaultTimeout: '30',
+      retentionDays: '30',
+      enableBuildCache: true,
     },
-    notifications: {
-      emailBuilds: true,
-      emailFailures: true,
-      emailSuccess: false,
-      browserNotifications: true,
+    runners: {
+      dockerEnabled: true,
+      maxRunners: '5',
+      defaultImage: 'node:18',
     },
-    security: {
-      twoFactorEnabled: false,
-      sessionTimeout: '24',
+    integrations: {
+      slackWebhook: '',
+      emailServer: '',
+      githubToken: '',
     },
-    server: {
-      serverUrl: 'http://localhost:8080',
-      maxBuilds: '10',
-      buildTimeout: '60',
-    }
   });
 
   const tabs: Tab[] = [
-    { id: 'general', name: 'General', icon: Cog6ToothIcon },
-    { id: 'notifications', name: 'Notifications', icon: BellIcon },
-    { id: 'security', name: 'Security', icon: ShieldCheckIcon },
-    { id: 'server', name: 'Server', icon: ServerIcon },
+    { id: 'system', name: 'System', icon: Cog6ToothIcon },
+    { id: 'runners', name: 'Runners', icon: PlayIcon },
+    { id: 'integrations', name: 'Integrations', icon: LinkIcon },
+    { id: 'plugins', name: 'Plugins', icon: PuzzlePieceIcon },
+    { id: 'backup', name: 'Backup', icon: DocumentArrowDownIcon },
   ];
 
-  const handleSettingChange = <T extends keyof SettingsType>(
-    category: T,
-    key: keyof SettingsType[T],
-    value: SettingsType[T][typeof key]
-  ) => {
+  const handleSettingChange = (category: string, key: string, value: any) => {
     setSettings(prev => ({
       ...prev,
       [category]: {
-        ...prev[category],
+        ...prev[category as keyof typeof prev],
         [key]: value
       }
     }));
@@ -71,8 +63,8 @@ const Settings: React.FC = () => {
     <div className="fade-in">
       {/* Page Title */}
       <div className="section-header">
-        <h1 className="text-xl font-medium text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-600">Manage your preferences and configuration</p>
+        <h1 className="text-xl font-medium text-gray-900">System Settings</h1>
+        <p className="text-sm text-gray-600">Configure CI/CD system settings and integrations</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -104,147 +96,73 @@ const Settings: React.FC = () => {
         {/* Main Content */}
         <div className="flex-1">
           <div className="card">
-            {/* General Settings */}
-            {activeTab === 'general' && (
+            {/* System Settings */}
+            {activeTab === 'system' && (
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">General Settings</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">System Configuration</h2>
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Language
+                      Max Concurrent Builds
                     </label>
-                    <select
-                      value={settings.general.language}
-                      onChange={(e) => handleSettingChange('general', 'language', e.target.value)}
+                    <input
+                      type="number"
+                      value={settings.system.maxConcurrentBuilds}
+                      onChange={(e) => handleSettingChange('system', 'maxConcurrentBuilds', e.target.value)}
                       className="minimal-input max-w-xs"
-                    >
-                      <option value="en-US">English (US)</option>
-                      <option value="zh-CN">中文 (简体)</option>
-                      <option value="zh-TW">中文 (繁體)</option>
-                      <option value="ja-JP">日本語</option>
-                    </select>
+                      min="1"
+                      max="50"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      Maximum number of builds that can run simultaneously
+                    </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Timezone
+                      Default Build Timeout (minutes)
                     </label>
-                    <select
-                      value={settings.general.timezone}
-                      onChange={(e) => handleSettingChange('general', 'timezone', e.target.value)}
+                    <input
+                      type="number"
+                      value={settings.system.defaultTimeout}
+                      onChange={(e) => handleSettingChange('system', 'defaultTimeout', e.target.value)}
                       className="minimal-input max-w-xs"
-                    >
-                      <option value="UTC">UTC</option>
-                      <option value="America/New_York">America/New York</option>
-                      <option value="Europe/London">Europe/London</option>
-                      <option value="Asia/Shanghai">Asia/Shanghai</option>
-                      <option value="Asia/Tokyo">Asia/Tokyo</option>
-                    </select>
+                      min="1"
+                      max="600"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      Default timeout for build jobs
+                    </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Theme
+                      Build History Retention (days)
                     </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="theme"
-                          value="light"
-                          checked={settings.general.theme === 'light'}
-                          onChange={(e) => handleSettingChange('general', 'theme', e.target.value as 'light' | 'dark' | 'system')}
-                          className="mr-2"
-                        />
-                        Light theme
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="theme"
-                          value="dark"
-                          checked={settings.general.theme === 'dark'}
-                          onChange={(e) => handleSettingChange('general', 'theme', e.target.value as 'light' | 'dark' | 'system')}
-                          className="mr-2"
-                        />
-                        Dark theme
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="theme"
-                          value="system"
-                          checked={settings.general.theme === 'system'}
-                          onChange={(e) => handleSettingChange('general', 'theme', e.target.value as 'light' | 'dark' | 'system')}
-                          className="mr-2"
-                        />
-                        Follow system
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Notification Settings */}
-            {activeTab === 'notifications' && (
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Notification Settings</h2>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Email Notifications</h3>
-                    <div className="space-y-3">
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={settings.notifications.emailBuilds}
-                          onChange={(e) => handleSettingChange('notifications', 'emailBuilds', e.target.checked)}
-                          className="mr-3"
-                        />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">All builds</div>
-                          <div className="text-sm text-gray-500">Receive email notifications for all builds</div>
-                        </div>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={settings.notifications.emailFailures}
-                          onChange={(e) => handleSettingChange('notifications', 'emailFailures', e.target.checked)}
-                          className="mr-3"
-                        />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">Build failures</div>
-                          <div className="text-sm text-gray-500">Send email only when builds fail</div>
-                        </div>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={settings.notifications.emailSuccess}
-                          onChange={(e) => handleSettingChange('notifications', 'emailSuccess', e.target.checked)}
-                          className="mr-3"
-                        />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">Build success</div>
-                          <div className="text-sm text-gray-500">Send email only when builds succeed</div>
-                        </div>
-                      </label>
-                    </div>
+                    <input
+                      type="number"
+                      value={settings.system.retentionDays}
+                      onChange={(e) => handleSettingChange('system', 'retentionDays', e.target.value)}
+                      className="minimal-input max-w-xs"
+                      min="1"
+                      max="365"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      How long to keep build logs and artifacts
+                    </p>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Browser Notifications</h3>
                     <label className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={settings.notifications.browserNotifications}
-                        onChange={(e) => handleSettingChange('notifications', 'browserNotifications', e.target.checked)}
+                        checked={settings.system.enableBuildCache}
+                        onChange={(e) => handleSettingChange('system', 'enableBuildCache', e.target.checked)}
                         className="mr-3"
                       />
                       <div>
-                        <div className="text-sm font-medium text-gray-900">Enable browser notifications</div>
-                        <div className="text-sm text-gray-500">Show build status notifications in browser</div>
+                        <div className="text-sm font-medium text-gray-900">Enable Build Cache</div>
+                        <div className="text-sm text-gray-500">Cache dependencies and build artifacts to speed up builds</div>
                       </div>
                     </label>
                   </div>
@@ -252,120 +170,263 @@ const Settings: React.FC = () => {
               </div>
             )}
 
-            {/* Security Settings */}
-            {activeTab === 'security' && (
+            {/* Runners Settings */}
+            {activeTab === 'runners' && (
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Security Settings</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Build Runners</h2>
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-4">Account Security</h3>
-                    <div className="space-y-4">
-                      <label className="flex items-center justify-between">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">Two-factor authentication</div>
-                          <div className="text-sm text-gray-500">Add an extra layer of security to your account</div>
-                        </div>
-                        <input
-                          type="checkbox"
-                          checked={settings.security.twoFactorEnabled}
-                          onChange={(e) => handleSettingChange('security', 'twoFactorEnabled', e.target.checked)}
-                          className="ml-3"
-                        />
-                      </label>
-                    </div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={settings.runners.dockerEnabled}
+                        onChange={(e) => handleSettingChange('runners', 'dockerEnabled', e.target.checked)}
+                        className="mr-3"
+                      />
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">Enable Docker Runners</div>
+                        <div className="text-sm text-gray-500">Allow builds to run in Docker containers</div>
+                      </div>
+                    </label>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Session timeout (hours)
+                      Maximum Runners
                     </label>
-                    <select
-                      value={settings.security.sessionTimeout}
-                      onChange={(e) => handleSettingChange('security', 'sessionTimeout', e.target.value)}
+                    <input
+                      type="number"
+                      value={settings.runners.maxRunners}
+                      onChange={(e) => handleSettingChange('runners', 'maxRunners', e.target.value)}
                       className="minimal-input max-w-xs"
-                    >
-                      <option value="1">1 hour</option>
-                      <option value="8">8 hours</option>
-                      <option value="24">24 hours</option>
-                      <option value="168">7 days</option>
-                      <option value="720">30 days</option>
-                    </select>
+                      min="1"
+                      max="20"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      Maximum number of concurrent runners
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Default Docker Image
+                    </label>
+                    <input
+                      type="text"
+                      value={settings.runners.defaultImage}
+                      onChange={(e) => handleSettingChange('runners', 'defaultImage', e.target.value)}
+                      className="minimal-input max-w-md"
+                      placeholder="node:18"
+                    />
+                    <p className="mt-1 text-sm text-gray-500">
+                      Default Docker image for builds
+                    </p>
                   </div>
 
                   <div className="pt-4 border-t border-gray-200">
-                    <button className="btn-danger">
-                      Log out all other sessions
-                    </button>
-                    <p className="mt-2 text-sm text-gray-500">
-                      This will force logout all your sessions on other devices
-                    </p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Active Runners</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Runner #1</div>
+                          <div className="text-sm text-gray-500">Docker • Running • node:18</div>
+                        </div>
+                        <span className="text-xs text-green-600 font-medium">Active</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Runner #2</div>
+                          <div className="text-sm text-gray-500">Docker • Idle • python:3.11</div>
+                        </div>
+                        <span className="text-xs text-gray-500 font-medium">Idle</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Server Settings */}
-            {activeTab === 'server' && (
+            {/* Integrations Settings */}
+            {activeTab === 'integrations' && (
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Server Settings</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">External Integrations</h2>
+                <div className="space-y-8">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Slack Integration</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Webhook URL
+                        </label>
+                        <input
+                          type="url"
+                          value={settings.integrations.slackWebhook}
+                          onChange={(e) => handleSettingChange('integrations', 'slackWebhook', e.target.value)}
+                          className="minimal-input"
+                          placeholder="https://hooks.slack.com/services/..."
+                        />
+                      </div>
+                      <button className="btn-secondary text-sm">Test Connection</button>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Email Server</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          SMTP Server
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.integrations.emailServer}
+                          onChange={(e) => handleSettingChange('integrations', 'emailServer', e.target.value)}
+                          className="minimal-input"
+                          placeholder="smtp.gmail.com:587"
+                        />
+                      </div>
+                      <button className="btn-secondary text-sm">Test Email</button>
+                    </div>
+                  </div>
+
+                  <div className="pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">GitHub Integration</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Personal Access Token
+                        </label>
+                        <input
+                          type="password"
+                          value={settings.integrations.githubToken}
+                          onChange={(e) => handleSettingChange('integrations', 'githubToken', e.target.value)}
+                          className="minimal-input"
+                          placeholder="ghp_..."
+                        />
+                      </div>
+                      <button className="btn-secondary text-sm">Verify Token</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Plugins Settings */}
+            {activeTab === 'plugins' && (
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Plugin Management</h2>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Server URL
-                    </label>
-                    <input
-                      type="url"
-                      value={settings.server.serverUrl}
-                      onChange={(e) => handleSettingChange('server', 'serverUrl', e.target.value)}
-                      className="minimal-input max-w-md"
-                      placeholder="http://localhost:8080"
-                    />
-                    <p className="mt-1 text-sm text-gray-500">
-                      Pipelines server URL address
-                    </p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Installed Plugins</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Docker Build Plugin</div>
+                          <div className="text-sm text-gray-500">Build and push Docker images • v1.2.3</div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button className="btn-secondary text-sm">Configure</button>
+                          <button className="btn-danger text-sm">Disable</button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Slack Notifications</div>
+                          <div className="text-sm text-gray-500">Send build notifications to Slack • v2.1.0</div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button className="btn-secondary text-sm">Configure</button>
+                          <button className="btn-danger text-sm">Disable</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
+                  <div className="pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Available Plugins</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">AWS Deploy</div>
+                          <div className="text-sm text-gray-500">Deploy applications to AWS services</div>
+                        </div>
+                        <button className="btn-primary text-sm">Install</button>
+                      </div>
+                      <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Test Reporter</div>
+                          <div className="text-sm text-gray-500">Generate test coverage reports</div>
+                        </div>
+                        <button className="btn-primary text-sm">Install</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Backup Settings */}
+            {activeTab === 'backup' && (
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">Backup & Recovery</h2>
+                <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Max concurrent builds
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.server.maxBuilds}
-                      onChange={(e) => handleSettingChange('server', 'maxBuilds', e.target.value)}
-                      className="minimal-input max-w-xs"
-                      min="1"
-                      max="50"
-                    />
-                    <p className="mt-1 text-sm text-gray-500">
-                      Maximum number of concurrent builds
-                    </p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Automatic Backups</h3>
+                    <div className="space-y-4">
+                      <label className="flex items-center">
+                        <input type="checkbox" defaultChecked className="mr-3" />
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">Enable automatic backups</div>
+                          <div className="text-sm text-gray-500">Automatically backup system data daily</div>
+                        </div>
+                      </label>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Backup Schedule
+                        </label>
+                        <select className="minimal-input max-w-xs">
+                          <option value="daily">Daily at 2:00 AM</option>
+                          <option value="weekly">Weekly on Sunday</option>
+                          <option value="monthly">Monthly on 1st</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Build timeout in minutes
-                    </label>
-                    <input
-                      type="number"
-                      value={settings.server.buildTimeout}
-                      onChange={(e) => handleSettingChange('server', 'buildTimeout', e.target.value)}
-                      className="minimal-input max-w-xs"
-                      min="1"
-                      max="600"
-                    />
-                    <p className="mt-1 text-sm text-gray-500">
-                      Maximum execution time for build tasks
-                    </p>
+                  <div className="pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Manual Backup</h3>
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600">
+                        Create a manual backup of all system data including configurations, build history, and user data.
+                      </p>
+                      <button className="btn-primary">Create Backup Now</button>
+                    </div>
                   </div>
 
-                  <div className="pt-4 border-t border-gray-200">
-                    <button className="btn-secondary mr-3">
-                      Test Connection
-                    </button>
-                    <button className="btn-secondary">
-                      Reset to defaults
-                    </button>
+                  <div className="pt-6 border-t border-gray-200">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Backups</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">backup-2023-12-20.zip</div>
+                          <div className="text-sm text-gray-500">December 20, 2023 • 45.2 MB</div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button className="btn-secondary text-sm">Download</button>
+                          <button className="btn-secondary text-sm">Restore</button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">backup-2023-12-19.zip</div>
+                          <div className="text-sm text-gray-500">December 19, 2023 • 43.8 MB</div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button className="btn-secondary text-sm">Download</button>
+                          <button className="btn-secondary text-sm">Restore</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -8,7 +8,9 @@ import Repository from './pages/Repository';
 import RepositorySettings from './pages/RepositorySettings';
 import Build from './pages/Build';
 import Settings from './pages/Settings';
+import UserProfile from './pages/UserProfile';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import './App.css';
 
 
@@ -23,6 +25,8 @@ const App: React.FC = () => {
     <Router>
       {!isAuthenticated() ? (
         <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/*" element={<Login />} />
         </Routes>
       ) : (
@@ -35,6 +39,7 @@ const App: React.FC = () => {
             <Route path="/repositories/:owner/:name/settings" element={<RepositorySettings />} />
             <Route path="/repositories/:owner/:name/builds/:buildNumber" element={<Build />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<UserProfile />} />
           </Routes>
         </Layout>
       )}
