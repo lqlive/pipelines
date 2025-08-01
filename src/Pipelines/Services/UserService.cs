@@ -9,7 +9,7 @@ namespace Pipelines.Services;
 
 public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHasher)
 {
-    public async Task<ErrorOr<UserResponse>> LoginAsync(LoginRequest loginRequest, CancellationToken cancellationToken = default)
+    public async Task<ErrorOr<UserResponse>> LoginAsync(LoginRequest loginRequest, string? ipAddress, CancellationToken cancellationToken = default)
     {
         var user = await userStore.GetByEmailAsync(loginRequest.Email, cancellationToken);
         if (user == null)
@@ -36,7 +36,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             return UserErrors.InvalidCredentials;
         }
 
-        await HandleLoginSuccessAsync(user, "", cancellationToken);
+        await HandleLoginSuccessAsync(user, ipAddress, cancellationToken);
 
         if (passwordVerificationResult == PasswordVerificationResult.SuccessRehashNeeded)
         {
@@ -44,8 +44,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             await userStore.UpdateAsync(user, cancellationToken);
         }
 
-        var result = new UserResponse();
-        return result;
+        return MapToUser(user);
     }
 
     private async Task HandleLoginFailedAsync(User user, CancellationToken cancellationToken)
@@ -60,6 +59,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
 
         await userStore.UpdateAsync(user, cancellationToken);
     }
+
     private async Task HandleLoginSuccessAsync(User user, string? ipAddress, CancellationToken cancellationToken)
     {
         user.FailedLoginAttempts = 0;
@@ -80,6 +80,19 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             UserStatus.Suspended => UserErrors.AccountSuspended,
             UserStatus.PendingVerification => UserErrors.EmailNotVerified,
             _ => UserErrors.AccountStatusInvalid
+        };
+    }
+
+      private UserResponse MapToUser(User user)
+    {
+        return new UserResponse
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Avatar = user.Avatar,
+            Status = user.Status,
+            Provider = user.Provider
         };
     }
 }

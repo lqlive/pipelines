@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Pipelines</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #333;
+            background-color: #f5f7fa;
+            background-image: radial-gradient(circle at 25% 25%, #667eea20 0%, transparent 50%), radial-gradient(circle at 75% 75%, #764ba220 0%, transparent 50%), linear-gradient(45deg, transparent 40%, #667eea05 50%, transparent 60%);
+            min-height: 100vh;
+        }
+
+        .outer-container {
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            background: white;
+            padding: 32px 24px 24px 24px;
+            text-align: center;
+            position: relative;
+        }
+        .header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .content {
+            padding: 24px;
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 500;
+            color: #202124;
+            margin: 0 0 20px 0;
+        }
+
+        .message {
+            color: #5f6368;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .verify-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-weight: 500;
+            margin-bottom: 32px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.25);
+        }
+
+            .verify-button:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 24px rgba(102, 126, 234, 0.35);
+            }
+
+        .help-text {
+            color: #5f6368;
+            font-size: 12px;
+            margin-bottom: 16px;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .footer {
+            padding: 20px 24px;
+            background: #fafbfc;
+            text-align: center;
+        }
+
+        .footer-text {
+            color: #9aa0a6;
+            font-size: 11px;
+        }
+
+        .footer-link {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            .outer-container {
+                padding: 20px 10px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="outer-container">
+        <div class="container">
+            <div class="header">
+                <div class="logo">🚀 Pipelines</div>
+                <div class="subtitle">Modern CI/CD Platform</div>
+            </div>
+
+            <div class="content">
+                <h1 class="title">Welcome aboard!</h1>
+
+                <div class="message">
+                    Hi {{UserName}},<br><br>
+                    Thanks for joining Pipelines! You're just one step away from experiencing the most intuitive CI/CD platform.
+                </div>
+
+                <a href="{{VerificationUrl}}" class="verify-button">Verify email address</a>
+
+                <div class="help-text">
+                    💡 This link will expire in 24 hours. If you didn't create this account, you can safely ignore this email.
+                </div>
+            </div>
+
+            <div class="footer">
+                <div class="footer-text">
+                    This email was sent by Pipelines.
+                    <a href="{{UnsubscribeUrl}}" class="footer-link">Unsubscribe</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,4 +1,6 @@
+using System;
 using System.Security.Claims;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -24,7 +26,8 @@ public static class UserApi
           UserService userService,
           CancellationToken cancellationToken)
     {
-        var result = await userService.LoginAsync(request,cancellationToken);
+        var ipAddress = context.GetClientIpAddress();
+        var result = await userService.LoginAsync(request, ipAddress,cancellationToken);
 
         if (result.IsError)
         {
@@ -36,6 +39,7 @@ public static class UserApi
         await SignInUserAsync(context, userResponse);
         return TypedResults.Ok();
     }
+
     private static async Task<Results<Ok, ProblemHttpResult>> Logout(HttpContext context, CancellationToken cancellationToken)
     {
 
