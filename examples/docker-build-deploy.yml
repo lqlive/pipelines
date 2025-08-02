@@ -1,0 +1,131 @@
+kind: pipeline
+type: docker
+name: docker-build-deploy
+
+platform:
+  os: linux
+  arch: amd64
+
+workspace:
+  path: /drone/src
+
+volumes:
+  - name: docker-sock
+    host: /var/run/docker.sock
+    container: /var/run/docker.sock
+
+steps:
+  - name: setup
+    image: alpine:3.18
+    commands:
+      - echo "Pipeline started at $(date)"
+      - echo "Building commit $DRONE_COMMIT"
+    environment:
+      TZ: "Asia/Shanghai"
+
+  - name: lint
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - dotnet format --verify-no-changes
+      - dotnet run --project Tools/CodeAnalysis
+
+  - name: build
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - dotnet build --configuration Release
+    depends_on:
+      - lint
+
+  - name: unit-tests
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - dotnet test --no-build --configuration Release
+      - dotnet test --collect:"XPlat Code Coverage"
+    depends_on:
+      - build
+
+  - name: docker-build
+    image: plugins/docker
+    settings:
+      registry: hub.docker.com
+      repo: myorg/pipelines
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      tags:
+        - latest
+        - ${DRONE_COMMIT:0:8}
+    volumes:
+      - name: docker-sock
+        path: /var/run/docker.sock
+    depends_on:
+      - unit-tests
+    when:
+      branch:
+        include:
+          - main
+
+  - name: deploy-staging
+    image: alpine:3.18
+    commands:
+      - apk add --no-cache curl
+      - curl -X POST "$DEPLOY_WEBHOOK_URL" -H "Authorization: Bearer $DEPLOY_TOKEN"
+    environment:
+      DEPLOY_WEBHOOK_URL:
+        from_secret: staging_webhook
+      DEPLOY_TOKEN:
+        from_secret: deploy_token
+    depends_on:
+      - docker-build
+    when:
+      branch:
+        include:
+          - main
+      event:
+        include:
+          - push
+
+  - name: notify
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: slack_webhook
+      channel: "#ci-cd"
+      template: |
+        {{#success build.status}}
+          ✅ Build #{{build.number}} succeeded
+          📝 {{build.message}}
+          🌿 {{build.branch}} by {{build.author}}
+        {{else}}
+          ❌ Build #{{build.number}} failed
+          📝 {{build.message}}
+          🌿 {{build.branch}} by {{build.author}}
+        {{/success}}
+    depends_on:
+      - deploy-staging
+    when:
+      status:
+        - success
+        - failure
+
+trigger:
+  branch:
+    include:
+      - main
+      - develop
+      - feature/*
+    exclude:
+      - temp/*
+  event:
+    include:
+      - push
+      - pull_request
+      - tag
+
+node:
+  runner: "docker-runner"
+  zone: "us-west-1"
+
+concurrency:
+  limit: 3 

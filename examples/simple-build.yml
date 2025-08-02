@@ -1,0 +1,62 @@
+kind: pipeline
+type: docker
+name: simple-ci-build
+
+platform:
+  os: linux
+  arch: amd64
+
+workspace:
+  path: /workspace
+
+clone:
+  depth: 50
+
+steps:
+  - name: restore
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - dotnet restore
+    environment:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+  - name: build
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - dotnet build --no-restore --configuration Release
+    depends_on:
+      - restore
+
+  - name: test
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - dotnet test --no-build --configuration Release --logger trx
+    depends_on:
+      - build
+    failure: ignore
+
+  - name: publish
+    image: mcr.microsoft.com/dotnet/sdk:9.0
+    commands:
+      - dotnet publish --no-build --configuration Release --output ./publish
+    depends_on:
+      - test
+    when:
+      branch:
+        include:
+          - main
+          - release/*
+
+trigger:
+  branch:
+    include:
+      - main
+      - dev
+      - feature/*
+  event:
+    include:
+      - push
+      - pull_request
+
+concurrency:
+  limit: 2 
