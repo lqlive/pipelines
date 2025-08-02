@@ -1,14 +1,10 @@
-using System;
+using Pipelines.Extensions;
+using Pipelines.Models.Users;
 using System.Security.Claims;
-
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
-
-using Pipelines.Core.Entities.Users;
-using Pipelines.Extensions;
-using Pipelines.Models.Users;
-using Pipelines.Services;
+using Pipelines.Services.Users;
 
 public static class UserApi
 {
@@ -18,7 +14,22 @@ public static class UserApi
 
         api.MapPost("/login", Login);
         api.MapPost("/logout", Logout);
+        api.MapPost("/register", Register);
         return api;
+    }
+
+    private static async Task<Results<Ok,ProblemHttpResult>> Register(RegisterRequest request,
+          UserService userService,
+          CancellationToken cancellationToken)
+    {
+        var result = await userService.RegisterAsync(request, cancellationToken);
+
+        if (result.IsError)
+        {
+            return result.Errors.HandleErrors();
+        }
+
+        return TypedResults.Ok();
     }
     private static async Task<Results<Ok, ProblemHttpResult>> Login(
           HttpContext context,
@@ -42,7 +53,6 @@ public static class UserApi
 
     private static async Task<Results<Ok, ProblemHttpResult>> Logout(HttpContext context, CancellationToken cancellationToken)
     {
-
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return TypedResults.Ok();
     }

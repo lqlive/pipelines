@@ -28,6 +28,14 @@ public static class UserErrors
         code: "User.AccountStatusInvalid",
         description: "Invalid account status");
 
+    public static readonly Error EmailAlreadyExists = Error.Conflict(
+        code: "User.EmailAlreadyExists",
+        description: "This email address is already registered");
+
+    public static readonly Error RegistrationFailed = Error.Failure(
+        code: "User.RegistrationFailed",
+        description: "Registration failed, please try again later");
+
     public static Error AccountLocked(DateTimeOffset lockoutEnd) => Error.Validation(
         code: "User.AccountLocked",
         description: $"Account is locked until {lockoutEnd:yyyy-MM-dd HH:mm:ss}");

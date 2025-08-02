@@ -5,8 +5,7 @@ public class User
     public Guid Id { get; set; }
     public required string Name { get; set; }
     public string? Email { get; set; }
-    public required string PasswordHash { get; set; }
-    public string? PasswordSalt { get; set; }
+    public string? PasswordHash { get; set; }
     public string? Avatar { get; set; }
     public UserStatus Status { get; set; } = UserStatus.Active;
     public bool IsEmailVerified { get; set; } = false;

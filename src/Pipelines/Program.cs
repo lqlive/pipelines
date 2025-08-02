@@ -1,15 +1,19 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Pipelines.Core.Entities.Users;
+using Pipelines.Session;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+builder.Services.AddDistributedMemoryCache();
+//builder.Services.AddStackExchangeRedisCache(options => { options.Configuration = "localhost:6379"; });
+builder.Services.AddScoped<DistributedTicketStore>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
+    .AddCookie((options) =>
     {
         options.LoginPath = "/api/user/login";
         options.LogoutPath = "/api/user/logout";
@@ -19,6 +23,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.None;
         options.Cookie.SameSite = SameSiteMode.None;
+
     })
     .AddMicrosoftAccount(options =>
     {
@@ -38,6 +43,7 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
 
 var app = builder.Build();
 

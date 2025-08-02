@@ -4,15 +4,44 @@ using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Stores;
 using Pipelines.Errors;
 using Pipelines.Models.Users;
+using Pipelines.Services.Validators;
 
-namespace Pipelines.Services;
+namespace Pipelines.Services.Users;
 
-public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHasher)
+public class UserService(IUserStore userStore, ValidatorService validatorService, IPasswordHasher<User> passwordHasher,ILogger<UserService> logger)
 {
-    public async Task<ErrorOr<UserResponse>> LoginAsync(LoginRequest loginRequest, string? ipAddress, CancellationToken cancellationToken = default)
+    public async Task<ErrorOr<Success>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
-        var user = await userStore.GetByEmailAsync(loginRequest.Email, cancellationToken);
-        if (user == null)
+        var existingUser = await userStore.GetByEmailAsync(request.Email, cancellationToken);
+        if (existingUser is not null)
+        {
+            return UserErrors.EmailAlreadyExists;
+        }
+        var validateEroor = await validatorService.ValidateAsync(request.Email, string.Empty, cancellationToken);
+
+        if (validateEroor.IsError)
+        {
+            return validateEroor.FirstError;
+        }
+
+        var user = CreateUserFromRequest(request);
+        user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
+
+        try
+        {
+            await userStore.CreateAsync(user, cancellationToken);
+            return Result.Success;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to register user with email {Email}", request.Email);
+            return UserErrors.RegistrationFailed;
+        }
+    }
+    public async Task<ErrorOr<UserResponse>> LoginAsync(LoginRequest request, string? ipAddress, CancellationToken cancellationToken = default)
+    {
+        var user = await userStore.GetByEmailAsync(request.Email, cancellationToken);
+        if (user is null)
         {
             return UserErrors.InvalidCredentials;
         }
@@ -28,7 +57,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             return statusError.FirstError;
         }
 
-        var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, loginRequest.Password);
+        var passwordVerificationResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash ?? string.Empty, request.Password);
 
         if (passwordVerificationResult == PasswordVerificationResult.Failed)
         {
@@ -40,7 +69,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
 
         if (passwordVerificationResult == PasswordVerificationResult.SuccessRehashNeeded)
         {
-            user.PasswordHash = passwordHasher.HashPassword(user, loginRequest.Password);
+            user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
             await userStore.UpdateAsync(user, cancellationToken);
         }
 
@@ -82,8 +111,22 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             _ => UserErrors.AccountStatusInvalid
         };
     }
+    
+    private static User CreateUserFromRequest(RegisterRequest request)
+    {
+        return new User
+        {
+            Name = request.Name,
+            Email = request.Email,
+            Status = UserStatus.PendingVerification,
+            Provider = UserProvider.None,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            FailedLoginAttempts = 0,
+        };
+    }
 
-      private UserResponse MapToUser(User user)
+    private UserResponse MapToUser(User user)
     {
         return new UserResponse
         {
