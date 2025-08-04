@@ -1,9 +1,9 @@
-using Pipelines.Extensions;
-using Pipelines.Models.Users;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Pipelines.Extensions;
+using Pipelines.Models.Users;
 using Pipelines.Services.Users;
 
 public static class UserApi
@@ -12,15 +12,31 @@ public static class UserApi
     {
         var api = app.MapGroup("api/users");
 
+        api.MapGet("/login/challenge", Challenge);
+        api.MapGet("/login/with", LoginWith);
         api.MapPost("/login", Login);
         api.MapPost("/logout", Logout);
         api.MapPost("/register", Register);
+
         return api;
     }
 
-    private static async Task<Results<Ok,ProblemHttpResult>> Register(RegisterRequest request,
-          UserService userService,
-          CancellationToken cancellationToken)
+    private static IResult LoginWith(string redirectUri)
+    {
+        return Results.Redirect(redirectUri);
+    }
+
+    private static IResult Challenge(string provider,string redirectUri)
+    {
+        return Results.Challenge(
+           new AuthenticationProperties { RedirectUri = $"/api/users/login/with?redirectUri={redirectUri}" },
+            [provider]
+         );
+    }
+
+    private static async Task<Results<Ok, ProblemHttpResult>> Register(RegisterRequest request,
+        UserService userService,
+        CancellationToken cancellationToken)
     {
         var result = await userService.RegisterAsync(request, cancellationToken);
 
@@ -38,7 +54,7 @@ public static class UserApi
           CancellationToken cancellationToken)
     {
         var ipAddress = context.GetClientIpAddress();
-        var result = await userService.LoginAsync(request, ipAddress,cancellationToken);
+        var result = await userService.LoginAsync(request, ipAddress, cancellationToken);
 
         if (result.IsError)
         {
@@ -56,7 +72,6 @@ public static class UserApi
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return TypedResults.Ok();
     }
-
     private static async Task SignInUserAsync(HttpContext context, UserResponse user)
     {
         var claims = new List<Claim>
@@ -70,7 +85,7 @@ public static class UserApi
         };
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var authProperties = new AuthenticationProperties
+        var properties = new AuthenticationProperties
         {
             IsPersistent = true,
             ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7)
@@ -79,6 +94,6 @@ public static class UserApi
         await context.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity),
-            authProperties);
+            properties);
     }
 }

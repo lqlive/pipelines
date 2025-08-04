@@ -12,24 +12,19 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddStackExchangeRedisCache(options => { options.Configuration = "localhost:6379"; });
 builder.Services.AddScoped<DistributedTicketStore>();
 
+builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie((options) =>
     {
-        options.LoginPath = "/api/user/login";
-        options.LogoutPath = "/api/user/logout";
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.SlidingExpiration = true;
         options.Cookie.Name = "Pipelines.Session";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.None;
-        options.Cookie.SameSite = SameSiteMode.None;
 
     })
     .AddMicrosoftAccount(options =>
     {
         options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"]!;
         options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"]!;
-        options.CallbackPath = "/api/auth/microsoft/callback";
+        options.CallbackPath = "/auth/microsoft/callback";
     });
 
 
@@ -52,6 +47,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+
+app.MapUserApiV1();
 
 app.UseAuthentication();
 app.UseAuthorization();

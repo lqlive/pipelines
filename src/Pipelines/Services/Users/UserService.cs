@@ -4,11 +4,10 @@ using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Stores;
 using Pipelines.Errors;
 using Pipelines.Models.Users;
-using Pipelines.Services.Validators;
 
 namespace Pipelines.Services.Users;
 
-public class UserService(IUserStore userStore, ValidatorService validatorService, IPasswordHasher<User> passwordHasher,ILogger<UserService> logger)
+public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHasher,ILogger<UserService> logger)
 {
     public async Task<ErrorOr<Success>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
@@ -17,13 +16,7 @@ public class UserService(IUserStore userStore, ValidatorService validatorService
         {
             return UserErrors.EmailAlreadyExists;
         }
-        var validateEroor = await validatorService.ValidateAsync(request.Email, string.Empty, cancellationToken);
-
-        if (validateEroor.IsError)
-        {
-            return validateEroor.FirstError;
-        }
-
+      
         var user = CreateUserFromRequest(request);
         user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
 
@@ -107,7 +100,6 @@ public class UserService(IUserStore userStore, ValidatorService validatorService
             UserStatus.Active => Result.Success,
             UserStatus.Inactive => UserErrors.AccountInactive,
             UserStatus.Suspended => UserErrors.AccountSuspended,
-            UserStatus.PendingVerification => UserErrors.EmailNotVerified,
             _ => UserErrors.AccountStatusInvalid
         };
     }
@@ -118,7 +110,7 @@ public class UserService(IUserStore userStore, ValidatorService validatorService
         {
             Name = request.Name,
             Email = request.Email,
-            Status = UserStatus.PendingVerification,
+            Status = UserStatus.Active,
             Provider = UserProvider.None,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
