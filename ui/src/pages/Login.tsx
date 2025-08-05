@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   RocketLaunchIcon,
   EyeIcon,
   EyeSlashIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
+import { UserService, LoginRequest } from '../services/userService';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LoginProvider {
   id: string;
@@ -30,6 +32,8 @@ interface LoginForm {
 }
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -101,13 +105,7 @@ const Login: React.FC = () => {
     setError('');
     
     try {
-      // Mock email/password login
-      console.log('Email login:', loginForm.email);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simple validation
+      // Client-side validation
       if (!loginForm.email || !loginForm.password) {
         throw new Error('Please fill in all fields');
       }
@@ -116,20 +114,26 @@ const Login: React.FC = () => {
         throw new Error('Password must be at least 6 characters');
       }
       
-      // Mock successful authentication
-      const userData = {
-        id: '1',
-        name: loginForm.email.split('@')[0],
+      // Prepare login data
+      const loginData: LoginRequest = {
         email: loginForm.email,
-        avatar: '',
-        provider: 'email',
-        accessToken: 'mock_access_token_' + Date.now(),
+        password: loginForm.password,
       };
       
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('authToken', userData.accessToken);
-      window.location.href = '/';
+      // Call real login API
+      await UserService.login(loginData);
+      
+      // Update authentication state
+      await login();
+      
+      // Login successful - cookies are set by the server
+      // No need to manually store tokens since using cookies
+      console.log('Login successful');
+      
+      // Redirect to home page using React Router
+      navigate('/', { replace: true });
     } catch (error: any) {
+      console.error('Login error:', error);
       setError(error.message || 'Login failed. Please try again.');
     } finally {
       setLoading(null);
@@ -142,20 +146,13 @@ const Login: React.FC = () => {
     
     try {
       console.log(`Initiating ${providerId} login`);
+      // TODO: Implement real provider login when backend supports it
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      const userData = {
-        id: '1',
-        name: 'John Developer',
-        email: 'john@example.com',
-        avatar: providerId === 'github' ? 'https://avatars.githubusercontent.com/u/1?v=4' : '',
-        provider: providerId,
-        accessToken: 'mock_access_token_' + Date.now(),
-      };
-      
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('authToken', userData.accessToken);
-      window.location.href = '/';
+      // For now, show message that provider login is not implemented
+      setError(`${providerId} login is not yet implemented. Please use email login.`);
+      setLoading(null);
+      return;
     } catch (error) {
       console.error(`${providerId} login failed:`, error);
       setError(`Failed to authenticate with ${providerId}. Please try again.`);

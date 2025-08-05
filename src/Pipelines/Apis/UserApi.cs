@@ -14,6 +14,7 @@ public static class UserApi
 
         api.MapGet("/login/challenge", Challenge);
         api.MapGet("/login/with", LoginWith);
+        api.MapGet("/me", GetCurrentUser);
         api.MapPost("/login", Login);
         api.MapPost("/logout", Logout);
         api.MapPost("/register", Register);
@@ -34,7 +35,8 @@ public static class UserApi
          );
     }
 
-    private static async Task<Results<Ok, ProblemHttpResult>> Register(RegisterRequest request,
+    private static async Task<Results<Ok, ProblemHttpResult>> Register(
+        RegisterRequest request,
         UserService userService,
         CancellationToken cancellationToken)
     {
@@ -65,6 +67,40 @@ public static class UserApi
 
         await SignInUserAsync(context, userResponse);
         return TypedResults.Ok();
+    }
+
+    private static async Task<Results<Ok<UserResponse>, ProblemHttpResult>> GetCurrentUser(
+        HttpContext context, 
+        UserService userService,
+        CancellationToken cancellationToken)
+    {
+        // Check if user is authenticated
+        if (!context.User.Identity?.IsAuthenticated ?? true)
+        {
+            return TypedResults.Problem(
+                statusCode: 401,
+                title: "Unauthorized",
+                detail: "User is not authenticated");
+        }
+
+        // Get user ID from claims
+        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return TypedResults.Problem(
+                statusCode: 401,
+                title: "Invalid User",
+                detail: "User ID not found in claims");
+        }
+
+        // Get user from database
+        var result = await userService.GetByIdAsync(userId, cancellationToken);
+        if (result.IsError)
+        {
+            return result.Errors.HandleErrors();
+        }
+
+        return TypedResults.Ok(result.Value);
     }
 
     private static async Task<Results<Ok, ProblemHttpResult>> Logout(HttpContext context, CancellationToken cancellationToken)

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   HomeIcon,
   FolderIcon,
@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
 import type { NavigationItem } from '../../types';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,19 +28,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    window.location.href = '/';
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Force navigation to login even if logout API fails
+      navigate('/login', { replace: true });
+    }
   };
-
-  const getUserData = () => {
-    const userData = localStorage.getItem('user');
-    return userData ? JSON.parse(userData) : null;
-  };
-
-  const user = getUserData();
 
   // Close user menu when clicking outside
   useEffect(() => {
@@ -241,9 +242,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     Profile Settings
                   </Link>
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       setMobileMenuOpen(false);
-                      handleLogout();
+                      await handleLogout();
                     }}
                     className="block w-full text-left px-3 py-3 text-sm font-normal rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                   >

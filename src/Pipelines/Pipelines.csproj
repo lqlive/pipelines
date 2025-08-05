@@ -10,11 +10,12 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
 	<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" />
 	<PackageReference Include="ErrorOr" />
-	<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis"/>
+	<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Pipelines.Core\Pipelines.Core.csproj" />
+    <ProjectReference Include="..\Pipelines.Storage.PostgreSQL\Pipelines.Storage.PostgreSQL.csproj" />
   </ItemGroup>
 
 </Project>

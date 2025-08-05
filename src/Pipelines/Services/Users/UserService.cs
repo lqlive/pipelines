@@ -118,6 +118,23 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
         };
     }
 
+    public async Task<ErrorOr<UserResponse>> GetByIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await userStore.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+        {
+            return UserErrors.UserNotFound;
+        }
+
+        var statusError = ValidateUserStatus(user.Status);
+        if (statusError.IsError)
+        {
+            return statusError.FirstError;
+        }
+
+        return MapToUser(user);
+    }
+
     private UserResponse MapToUser(User user)
     {
         return new UserResponse

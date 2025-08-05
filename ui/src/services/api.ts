@@ -1,0 +1,122 @@
+// API configuration file
+// Use relative path so Vite proxy handles the routing
+export const API_BASE_URL = '';
+
+// API error type
+export interface ApiError {
+  type: string;
+  title: string;
+  status: number;
+  detail: string;
+}
+
+// Generic API response handler
+export class ApiClient {
+  private baseURL: string;
+
+  constructor(baseURL: string) {
+    this.baseURL = baseURL;
+  }
+
+  async request<T>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${endpoint}`;
+    
+    const defaultHeaders = {
+      'Content-Type': 'application/json',
+    };
+
+    const config: RequestInit = {
+      ...options,
+      credentials: 'include', // Include cookies in requests
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+    };
+
+    try {
+      const response = await fetch(url, config);
+      
+      if (!response.ok) {
+        // Handle error response
+        const errorData: ApiError = await response.json();
+        throw new Error(errorData.detail || errorData.title || 'API request failed');
+      }
+
+      // If response status is 204 (No Content), return empty object
+      if (response.status === 204) {
+        return {} as T;
+      }
+
+      // Check if response has content before trying to parse JSON
+      const contentType = response.headers.get('content-type');
+      const contentLength = response.headers.get('content-length');
+      
+      // If no content-type or content-length is 0, return empty object
+      if (!contentType?.includes('application/json') || contentLength === '0') {
+        return {} as T;
+      }
+
+      // Check if response body is empty
+      const text = await response.text();
+      if (!text.trim()) {
+        return {} as T;
+      }
+
+      return JSON.parse(text);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Network error occurred');
+    }
+  }
+
+  // GET request
+  async get<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'GET',
+      headers,
+    });
+  }
+
+  // POST request
+  async post<T>(
+    endpoint: string,
+    data?: any,
+    headers?: Record<string, string>
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+      headers,
+    });
+  }
+
+  // PUT request
+  async put<T>(
+    endpoint: string,
+    data?: any,
+    headers?: Record<string, string>
+  ): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+      headers,
+    });
+  }
+
+  // DELETE request
+  async delete<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'DELETE',
+      headers,
+    });
+  }
+}
+
+// Create default API client instance
+export const apiClient = new ApiClient(API_BASE_URL);
