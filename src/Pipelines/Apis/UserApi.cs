@@ -1,7 +1,10 @@
 using System.Security.Claims;
+using System.Threading;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
+
 using Pipelines.Extensions;
 using Pipelines.Models.Users;
 using Pipelines.Services.Users;
@@ -22,8 +25,54 @@ public static class UserApi
         return api;
     }
 
-    private static IResult LoginWith(string redirectUri)
+    private static async Task<IResult> LoginWith(
+        HttpContext context,
+        UserService userService,
+        string redirectUri,
+        CancellationToken cancellationToken)
     {
+        // Check if user is authenticated
+        if (!context.User.Identity?.IsAuthenticated ?? true)
+        {
+            return TypedResults.Problem(
+                statusCode: 401,
+                title: "Unauthorized",
+                detail: "User is not authenticated");
+        }
+
+        var email = context.User.FindFirst(ClaimTypes.Email)?.Value;
+        var name = context.User.FindFirst(ClaimTypes.Name)?.Value 
+                   ?? context.User.FindFirst(ClaimTypes.GivenName)?.Value
+                   ?? context.User.Identity?.Name;
+        var avatar = context.User.FindFirst("picture")?.Value 
+                     ?? context.User.FindFirst("avatar_url")?.Value;
+
+       
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(name))
+        {
+            return TypedResults.Problem(
+                statusCode: 400,
+                title: "Incomplete User Information",
+                detail: "Unable to obtain required user information (email and name) from external provider");
+        }
+
+        var ipAddress = context.GetClientIpAddress();
+        var request = new LoginWithRequest 
+        { 
+            Email = email, 
+            UserName = name,
+            Avatar = avatar
+        };
+
+        var result = await userService.LoginWithAsync(request, ipAddress, cancellationToken);
+        
+        if (result.IsError)
+        {
+            return result.Errors.HandleErrors();
+        }
+
+        await SignInUserAsync(context, result.Value);
+        
         return Results.Redirect(redirectUri);
     }
 

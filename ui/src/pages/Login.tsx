@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   RocketLaunchIcon,
   EyeIcon,
@@ -34,6 +34,7 @@ interface LoginForm {
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -42,10 +43,10 @@ const Login: React.FC = () => {
     password: '',
   });
 
-  // 登录配置 - 可以从环境变量或API获取
+  // Login configuration - can be obtained from environment variables or API
   const loginConfig: LoginConfig = {
     enableEmailLogin: true,
-    enableProviders: ['github', 'microsoft', 'google'], // 可配置启用的提供商
+    enableProviders: ['github', 'microsoft', 'google'], // Configurable enabled providers
     appName: 'Pipelines',
   };
 
@@ -130,8 +131,11 @@ const Login: React.FC = () => {
       // No need to manually store tokens since using cookies
       console.log('Login successful');
       
-      // Redirect to home page using React Router
-      navigate('/', { replace: true });
+      // Get redirect URI from query params, default to home page
+      const redirectUri = searchParams.get('redirectUri') || '/';
+      
+      // Redirect to original page or home page using React Router
+      navigate(redirectUri, { replace: true });
     } catch (error: any) {
       console.error('Login error:', error);
       setError(error.message || 'Login failed. Please try again.');
@@ -146,17 +150,27 @@ const Login: React.FC = () => {
     
     try {
       console.log(`Initiating ${providerId} login`);
-      // TODO: Implement real provider login when backend supports it
-      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // For now, show message that provider login is not implemented
-      setError(`${providerId} login is not yet implemented. Please use email login.`);
-      setLoading(null);
-      return;
+      // Capitalize provider name for backend API
+      const providerName = providerId.charAt(0).toUpperCase() + providerId.slice(1);
+      
+      if (providerId === 'microsoft') {
+        // Get redirect URI from query params, default to home page
+        const redirectUri = searchParams.get('redirectUri') || '/';
+        
+        // Use UserService to initiate OAuth login
+        UserService.loginWithProvider(providerName, window.location.origin + redirectUri);
+        return;
+      } else {
+        // Other providers can use the same method when backend supports them
+        // For now, show message that they are not yet implemented
+        setError(`${providerId} login is not yet implemented. Please use email login.`);
+        setLoading(null);
+        return;
+      }
     } catch (error) {
       console.error(`${providerId} login failed:`, error);
       setError(`Failed to authenticate with ${providerId}. Please try again.`);
-    } finally {
       setLoading(null);
     }
   };

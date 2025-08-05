@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { apiClient, OAUTH_BASE_URL } from './api';
 
 // Login request interface
 export interface LoginRequest {
@@ -74,5 +74,18 @@ export class UserService {
       // Don't prevent local logout if API call fails
       console.warn('Logout API call failed:', error);
     }
+  }
+
+  /**
+   * Initiate OAuth provider login
+   * @param providerId OAuth provider ID (e.g., 'microsoft', 'google', 'github')
+   * @param redirectUri URL to redirect to after successful authentication
+   */
+  static loginWithProvider(providerId: string, redirectUri?: string): void {
+    const finalRedirectUri = redirectUri || window.location.origin + '/';
+    const challengeUrl = `${OAUTH_BASE_URL}/api/users/login/challenge?provider=${providerId}&redirectUri=${encodeURIComponent(finalRedirectUri)}`;
+    
+    // Redirect to OAuth provider challenge endpoint
+    window.location.href = challengeUrl;
   }
 }

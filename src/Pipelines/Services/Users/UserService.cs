@@ -1,5 +1,9 @@
+using System.Threading;
+
 using ErrorOr;
+
 using Microsoft.AspNetCore.Identity;
+
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Stores;
 using Pipelines.Errors;
@@ -9,6 +13,39 @@ namespace Pipelines.Services.Users;
 
 public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHasher,ILogger<UserService> logger)
 {
+    public async Task<ErrorOr<UserResponse>> LoginWithAsync(LoginWithRequest request, string? ipAddress, CancellationToken cancellationToken)
+    {
+        var existingUser = await userStore.GetByEmailAsync(request.Email, cancellationToken);
+        if (existingUser is not null)
+        {
+            existingUser.LastLoginIp = ipAddress;
+            existingUser.LastLoginTime = DateTimeOffset.UtcNow;
+            existingUser.UpdatedAt = DateTimeOffset.UtcNow;
+            existingUser.FailedLoginAttempts = 0;
+     
+          
+            await userStore.UpdateAsync(existingUser, cancellationToken);
+            return MapToUser(existingUser);
+        }
+
+        var newUser = new User 
+        { 
+            Name = request.UserName, 
+            Email = request.Email,
+            Avatar = request.Avatar,
+            Status = UserStatus.Active,
+            Provider = UserProvider.None, 
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            LastLoginTime = DateTimeOffset.UtcNow,
+            LastLoginIp = ipAddress,
+            FailedLoginAttempts = 0
+        };
+        
+        await userStore.CreateAsync(newUser, cancellationToken);
+        return MapToUser(newUser);
+    }
+
     public async Task<ErrorOr<Success>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
     {
         var existingUser = await userStore.GetByEmailAsync(request.Email, cancellationToken);

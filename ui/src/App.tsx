@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Repositories from './pages/Repositories';
@@ -16,10 +16,11 @@ import './App.css';
 
 
 
-const AppContent: React.FC = () => {
+// Component to handle redirect logic for unauthenticated users
+const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
-  // Show loading state while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -28,28 +29,42 @@ const AppContent: React.FC = () => {
     );
   }
 
+  if (!isAuthenticated) {
+    // Redirect to login with the current location as redirectUri
+    const redirectUri = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirectUri=${redirectUri}`} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const AppContent: React.FC = () => {
+
   return (
     <Router>
-      {!isAuthenticated ? (
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/*" element={<Login />} />
-        </Routes>
-      ) : (
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/repositories" element={<Repositories />} />
-            <Route path="/repositories/new" element={<ImportRepository />} />
-            <Route path="/repositories/:owner/:name" element={<Repository />} />
-            <Route path="/repositories/:owner/:name/settings" element={<RepositorySettings />} />
-            <Route path="/repositories/:owner/:name/builds/:buildNumber" element={<Build />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<UserProfile />} />
-          </Routes>
-        </Layout>
-      )}
+      <Routes>
+        {/* Public routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        {/* Protected routes */}
+        <Route path="/*" element={
+          <RequireAuth>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/repositories" element={<Repositories />} />
+                <Route path="/repositories/new" element={<ImportRepository />} />
+                <Route path="/repositories/:owner/:name" element={<Repository />} />
+                <Route path="/repositories/:owner/:name/settings" element={<RepositorySettings />} />
+                <Route path="/repositories/:owner/:name/builds/:buildNumber" element={<Build />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/profile" element={<UserProfile />} />
+              </Routes>
+            </Layout>
+          </RequireAuth>
+        } />
+      </Routes>
     </Router>
   );
 };

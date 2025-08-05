@@ -2,6 +2,10 @@
 // Use relative path so Vite proxy handles the routing
 export const API_BASE_URL = '';
 
+// OAuth base URL for external redirects (needs full URL)
+// This can be overridden by environment variables
+export const OAUTH_BASE_URL = (import.meta as any).env?.VITE_OAUTH_BASE_URL || 'http://localhost:5169';
+
 // API error type
 export interface ApiError {
   type: string;
