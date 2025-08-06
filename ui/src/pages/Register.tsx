@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { UserService } from '../services/userService';
 import {
   RocketLaunchIcon,
   EyeIcon,
@@ -47,14 +48,14 @@ const Register: React.FC = () => {
     acceptTerms: false,
   });
 
-  // 注册配置
+  // Registration configuration
   const registerConfig: RegisterConfig = {
     enableEmailRegister: true,
     appName: 'Pipelines',
     requireTermsAcceptance: true,
   };
 
-  // 密码强度检查
+  // Password strength validation
   const checkPasswordStrength = (password: string): PasswordStrength => {
     let score = 0;
     const feedback: string[] = [];
@@ -126,21 +127,26 @@ const Register: React.FC = () => {
     setSuccess(false);
 
     try {
-      // 表单验证
+      // Form validation
       const validationError = validateForm();
       if (validationError) {
         throw new Error(validationError);
       }
 
-      console.log('Email registration:', registerForm);
+      // Prepare registration data
+      const registerData = {
+        name: registerForm.name.trim(),
+        email: registerForm.email.trim(),
+        password: registerForm.password,
+      };
 
-      // 模拟API调用
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call real registration API
+      await UserService.register(registerData);
 
-      // 模拟成功注册
+      // Registration successful
       setSuccess(true);
       
-      // 3秒后跳转到登录页面
+      // Redirect to login page after 3 seconds
       setTimeout(() => {
         navigate('/login', { 
           state: { 

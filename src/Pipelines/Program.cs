@@ -32,7 +32,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"]!;
         options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"]!;
         options.CallbackPath = "/auth/microsoft/callback";
+    })
+    .AddGitHub(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:GitHub:ClientId"]!;
+        options.ClientSecret = builder.Configuration["Authentication:GitHub:ClientSecret"]!;
+        options.CallbackPath = "/auth/github/callback";
     });
+
 
 builder.Services.AddCors(options =>
 {

@@ -1,10 +1,7 @@
 using System.Security.Claims;
-using System.Threading;
-
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
-
 using Pipelines.Extensions;
 using Pipelines.Models.Users;
 using Pipelines.Services.Users;

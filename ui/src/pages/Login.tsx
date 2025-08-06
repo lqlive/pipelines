@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   RocketLaunchIcon,
   EyeIcon,
   EyeSlashIcon,
   ExclamationCircleIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import { UserService, LoginRequest } from '../services/userService';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,8 +36,10 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loginForm, setLoginForm] = useState<LoginForm>({
     email: '',
@@ -99,6 +102,16 @@ const Login: React.FC = () => {
   ];
 
   const enabledProviders = allProviders.filter(provider => provider.enabled);
+
+  // Check for registration success message
+  useEffect(() => {
+    const state = location.state as { message?: string };
+    if (state?.message) {
+      setSuccess(state.message);
+      // Clear the state to prevent showing the message again
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,7 +187,6 @@ const Login: React.FC = () => {
       setLoading(null);
     }
   };
-
 
 
   return (
@@ -254,6 +266,16 @@ const Login: React.FC = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="bg-white/80 backdrop-blur-sm py-8 px-4 shadow-xl rounded-xl sm:px-10 border border-white/20">
+          {/* Success Message */}
+          {success && (
+            <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-md">
+              <div className="flex items-center">
+                <CheckCircleIcon className="h-4 w-4 text-green-400 mr-2" />
+                <span className="text-sm text-green-800">{success}</span>
+              </div>
+            </div>
+          )}
+
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-md">
