@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Management;
+using Pipelines.Provider.GitHub;
+using Pipelines.Services.Remotes;
 using Pipelines.Services.Users;
 using Pipelines.Session;
 using Pipelines.Storage.PostgreSQL.Management;
@@ -9,7 +11,24 @@ using Pipelines.Storage.PostgreSQL.Management;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddPipelinesCore()
-    .AddPostgreSQLDatabase();
+    .AddPostgreSQLDatabase()
+    .AddGitHub(options =>
+    {
+        var githubSection = builder.Configuration.GetSection("RemoteClient:GitHub");
+        options.ClientId = githubSection["ClientId"]!;
+        options.ClientSecret = githubSection["ClientSecret"]!;
+        options.AuthorizationEndpoint = githubSection["AuthorizationEndpoint"]!;
+        options.CallbackPath = githubSection["CallbackPath"]!;
+        
+        var scopes = githubSection.GetSection("Scope").Get<string[]>();
+        if (scopes != null)
+        {
+            foreach (var scope in scopes)
+            {
+                options.Scopes.Add(scope);
+            }
+        }
+    });
 
 builder.Services.AddOpenApi();
 
@@ -18,6 +37,7 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddStackExchangeRedisCache(options => { options.Configuration = "localhost:6379"; });
 builder.Services.AddScoped<DistributedTicketStore>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<RemoteService>();
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -32,14 +52,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"]!;
         options.ClientSecret = builder.Configuration["Authentication:Microsoft:ClientSecret"]!;
         options.CallbackPath = "/auth/microsoft/callback";
-    })
-    .AddGitHub(options =>
-    {
-        options.ClientId = builder.Configuration["Authentication:GitHub:ClientId"]!;
-        options.ClientSecret = builder.Configuration["Authentication:GitHub:ClientSecret"]!;
-        options.CallbackPath = "/auth/github/callback";
     });
-
 
 builder.Services.AddCors(options =>
 {
@@ -68,5 +81,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapUserApiV1();
+app.MapRemoteApiV1();
 
 app.Run();

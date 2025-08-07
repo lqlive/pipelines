@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-
-namespace Pipelines.Apis;
+using Pipelines.Services.Remotes;
 
 public static class RemoteApi
 {
@@ -13,14 +12,27 @@ public static class RemoteApi
 
         return api;
     }
-    private static IResult Challenge(string provider)
+    private static async Task<IResult> Challenge(
+        HttpContext context,
+        string provider,
+        RemoteService service,
+        CancellationToken cancellationToken)
     {
-      throw new NotImplementedException(provider);
+        // Create AuthenticationProperties with minimal customization
+        var properties = new AuthenticationProperties();
+        var result = await service.GetChallengeUrlAsync(context, properties, cancellationToken);
+
+        return TypedResults.Redirect(result);
     }
-    private static Task<IResult> Callback(
+
+    private static async Task<IResult> Callback(
        HttpContext context,
+       RemoteService service,
+       string code,
        CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var properties = new AuthenticationProperties();
+        var result = await service.CreateTicketAsync(code, properties, cancellationToken);
+        return TypedResults.Json(result);
     }
 }

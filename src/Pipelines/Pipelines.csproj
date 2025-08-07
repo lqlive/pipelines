@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Pipelines.Core\Pipelines.Core.csproj" />
     <ProjectReference Include="..\Pipelines.Storage.PostgreSQL\Pipelines.Storage.PostgreSQL.csproj" />
+    <ProjectReference Include="..\Pipelines.Provider.GitHub\Pipelines.Provider.GitHub.csproj" />
   </ItemGroup>
 
 </Project>

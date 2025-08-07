@@ -1,6 +1,6 @@
-﻿namespace Pipelines.Core.Provider;
+﻿using Microsoft.AspNetCore.Authentication;
+namespace Pipelines.Core.Provider;
 public interface IRemoteProvider
-{
-    Task<string> GetChallengeUrlAsync(AuthenticationProperties propertie,string redirectUri,CancellationToken cancellationToken);
-    Task ListAsync(CancellationToken cancellationToken);
+{   
+    Task ListAsync(CancellationToken cancellationToken = default);
 }

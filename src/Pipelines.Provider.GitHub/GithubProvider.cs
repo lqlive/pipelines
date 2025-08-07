@@ -1,76 +1,66 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.WebUtilities;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octokit;
 using Pipelines.Core.Provider;
 
 namespace Pipelines.Provider.GitHub;
-public class GithubProvider : IRemoteProvider
+public sealed class GithubProvider : OAuthProvider, IRemoteProvider
 {
     private readonly GitHubClient _gitHubClient;
     private readonly GitHubRemoteOptions _options;
-    public GithubProvider(GitHubClient gitHubClient, IOptionsMonitor<GitHubRemoteOptions> options)
+    private readonly ILogger<GithubProvider> _logger;
+    public GithubProvider(GitHubClient gitHubClient,
+        IOptionsMonitor<GitHubRemoteOptions> options,
+        ILogger<GithubProvider> logger)
     {
         _gitHubClient = gitHubClient;
         _options = options.CurrentValue;
+        _logger = logger;
     }
 
-    public Task<string> GetChallengeUrlAsync(AuthenticationProperties properties,string redirectUri, CancellationToken cancellationToken)
+    public override async Task<AuthenticationTicket> CreateTicketAsync(string code,
+        AuthenticationProperties properties, 
+        CancellationToken cancellationToken = default)
     {
-        var queryStrings = new Dictionary<string, string>
-            {
-                { "client_id", _options.ClientId },
-                { "response_type", "code" },
-                { "redirect_uri", redirectUri }
-            };
+        var request = new OauthTokenRequest(_options.ClientId, _options.ClientSecret, code);
+        var accessToken = await _gitHubClient.Oauth.CreateAccessToken(request, cancellationToken);
+     
+        if (!string.IsNullOrEmpty(accessToken.Error))
+        {
+            throw new AuthenticationFailureException(accessToken.ErrorDescription);
+        }
 
-        AddQueryString(queryStrings, properties, "scope", FormatScope, _options.Scope);
+        var identity = new ClaimsIdentity("GitHub");
 
-        var url= QueryHelpers.AddQueryString(_options.AuthorizationEndpoint, queryStrings!);
-        return Task.FromResult(url);
+        properties.StoreTokens(
+        [
+             new AuthenticationToken { Name = "access_token", Value = accessToken.AccessToken },
+             new AuthenticationToken { Name = "token_type", Value = accessToken.TokenType },
+        ]);
+
+        var principal = new ClaimsPrincipal(identity);
+        return new AuthenticationTicket(principal, properties, "GitHub");
     }
 
-    public async Task ListAsync(CancellationToken cancellationToken)
+    public override Task<string> GetChallengeUrlAsync(HttpContext context, 
+        AuthenticationProperties? properties = null,
+        CancellationToken cancellationToken = default)
     {
-        var repositories = await _gitHubClient.Repository.GetAllForCurrent();
-        
-        
+
+        var redirectUri = BuildRedirectUri(context, _options.CallbackPath);
+        var request = new OauthLoginRequest(_options.ClientId)
+        {
+            RedirectUri = new Uri(redirectUri),
+        };
+        var uri = _gitHubClient.Oauth.GetGitHubLoginUrl(request);
+        return Task.FromResult(uri.ToString());
+    }
+
+    public Task ListAsync(CancellationToken cancellationToken)
+    {
         throw new NotImplementedException();
     }
-
-    private static void AddQueryString<T>(
-       Dictionary<string, string> queryStrings,
-       AuthenticationProperties properties,
-       string name,
-       Func<T, string> formatter,
-       T defaultValue)
-    {
-        string? value;
-        var parameterValue = properties.GetParameter<T>(name);
-        if (parameterValue != null)
-        {
-            value = formatter(parameterValue);
-        }
-        else if (!properties.Items.TryGetValue(name, out value))
-        {
-            value = formatter(defaultValue);
-        }
-
-        // Remove the parameter from AuthenticationProperties so it won't be serialized into the state
-        properties.Items.Remove(name);
-
-        if (value != null)
-        {
-            queryStrings[name] = value;
-        }
-    }
-
-    private static void AddQueryString(
-        Dictionary<string, string> queryStrings,
-        AuthenticationProperties properties,
-        string name,
-        string? defaultValue = null)
-        => AddQueryString(queryStrings, properties, name, x => x!, defaultValue);
-    private string FormatScope(IEnumerable<string> scopes)
-      => string.Join(" ", scopes);
 }
