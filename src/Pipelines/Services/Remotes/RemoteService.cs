@@ -1,5 +1,7 @@
 ﻿using ErrorOr;
+
 using Microsoft.AspNetCore.Authentication;
+
 using Pipelines.Core.Provider;
 using Pipelines.Errors;
 using Pipelines.Provider.GitHub;
@@ -17,17 +19,18 @@ public class RemoteService(GithubProvider remoteProvider,ILogger<RemoteService> 
         return remoteProvider.CreateTicketAsync(code, properties, cancellationToken);
     }
 
-    public async Task<ErrorOr<RepositoryList>> ListAsync(CancellationToken cancellationToken = default)
+    public async Task<ErrorOr<RepositoryList>> ListAsync(Guid userId,CancellationToken cancellationToken = default)
     {
         try
         {
-            var result =  await remoteProvider.ListAsync(cancellationToken);
+            var result = await remoteProvider.ListAsync(userId, cancellationToken);
+
             return result;
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "");
             return RemoteErrors.Unauthorized;
-        } 
+        }
     }
 }

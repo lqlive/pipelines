@@ -23,13 +23,13 @@ public sealed class GithubProvider : OAuthProvider, IRemoteProvider
     }
 
     public override async Task<AuthenticationTicket> CreateTicketAsync(string code,
-        AuthenticationProperties properties, 
+        AuthenticationProperties properties,
         CancellationToken cancellationToken = default)
     {
         var client = await _builder.CreateClientAsync();
         var request = new OauthTokenRequest(_options.ClientId, _options.ClientSecret, code);
         var accessToken = await client.Oauth.CreateAccessToken(request, cancellationToken);
-     
+
         if (!string.IsNullOrEmpty(accessToken.Error))
         {
             throw new AuthenticationFailureException(accessToken.ErrorDescription);
@@ -62,9 +62,9 @@ public sealed class GithubProvider : OAuthProvider, IRemoteProvider
         return uri.ToString();
     }
 
-    public async Task<RepositoryList> ListAsync(CancellationToken cancellationToken)
+    public async Task<RepositoryList> ListAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        var client = await _builder.CreateClientAsync();
+        var client = await _builder.CreateClientAsync(userId, cancellationToken);
 
         var repositories = await client.Repository.GetAllForCurrent();
 
@@ -75,7 +75,6 @@ public sealed class GithubProvider : OAuthProvider, IRemoteProvider
             Items = items
         };
     }
-
     private RepositoryItem MapResponse(Repository repository)
     {
         return new RepositoryItem

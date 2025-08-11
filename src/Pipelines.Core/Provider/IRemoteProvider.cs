@@ -1,5 +1,5 @@
 ﻿namespace Pipelines.Core.Provider;
 public interface IRemoteProvider
 {
-    Task<RepositoryList> ListAsync(CancellationToken cancellationToken = default);
+    Task<RepositoryList> ListAsync(Guid userId, CancellationToken cancellationToken = default);
 }

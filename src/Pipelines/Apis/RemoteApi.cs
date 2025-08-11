@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.HttpResults;
-
 using Pipelines.Core.Provider;
 using Pipelines.Extensions;
+using Pipelines.Services.Identity;
 using Pipelines.Services.Remotes;
 
 public static class RemoteApi
@@ -13,9 +13,7 @@ public static class RemoteApi
 
         api.MapGet("/{provider}/authorization/challenge", Challenge);
         api.MapGet("/{provider}/authorization/callback", Callback);
-
         api.MapGet("/{provider}/repositories", List);
-
 
         return api;
     }
@@ -45,9 +43,11 @@ public static class RemoteApi
 
     private static async Task<Results<Ok<RepositoryList>, ProblemHttpResult>> List(
        RemoteService service,
+       IdentityService identityService,
        CancellationToken cancellationToken)
     {
-        var result = await service.ListAsync(cancellationToken);
+        var userId = identityService.GetUserIdentity();
+        var result = await service.ListAsync(Guid.Parse(userId), cancellationToken);
 
         if (result.IsError)
         {
