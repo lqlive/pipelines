@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
-namespace Pipelines.Core.Provider;
+﻿namespace Pipelines.Core.Provider;
 public interface IRemoteProvider
-{   
-    Task ListAsync(CancellationToken cancellationToken = default);
+{
+    Task<RepositoryList> ListAsync(CancellationToken cancellationToken = default);
 }

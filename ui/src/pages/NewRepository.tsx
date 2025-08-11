@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   FolderIcon,
-  GlobeAltIcon,
   LockClosedIcon,
   MagnifyingGlassIcon,
   CheckCircleIcon,
@@ -12,6 +11,7 @@ import {
   CloudIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
+import { RemoteService, RemoteRepository } from '../services/remoteService';
 
 interface GitProvider {
   id: string;
@@ -22,21 +22,7 @@ interface GitProvider {
   repositoryCount?: number;
 }
 
-interface RemoteRepository {
-  id: string;
-  name: string;
-  fullName: string;
-  description: string;
-  private: boolean;
-  language: string | null;
-  stars: number;
-  forks: number;
-  lastUpdated: string;
-  defaultBranch: string;
-  cloneUrl: string;
-  enabled: boolean;
-  provider: string;
-}
+
 
 const NewRepository: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +33,8 @@ const NewRepository: React.FC = () => {
   const [repositories, setRepositories] = useState<RemoteRepository[]>([]);
   const [filteredRepositories, setFilteredRepositories] = useState<RemoteRepository[]>([]);
   const [selectedRepos, setSelectedRepos] = useState<Set<string>>(new Set());
+  const [authenticationRequired, setAuthenticationRequired] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const gitProviders: GitProvider[] = [
     {
@@ -80,99 +68,7 @@ const NewRepository: React.FC = () => {
     },
   ];
 
-  // Mock repository data
-  const mockRepositories: RemoteRepository[] = [
-    {
-      id: '1',
-      name: 'backend-api',
-      fullName: 'myorg/backend-api',
-      description: 'Backend API service providing core business logic',
-      private: false,
-      language: 'TypeScript',
-      stars: 42,
-      forks: 12,
-      lastUpdated: '2024-01-15T10:30:00Z',
-      defaultBranch: 'main',
-      cloneUrl: 'https://github.com/myorg/backend-api.git',
-      enabled: true,
-      provider: 'github',
-    },
-    {
-      id: '2',
-      name: 'frontend-app',
-      fullName: 'myorg/frontend-app',
-      description: 'React frontend application with modern UI',
-      private: false,
-      language: 'JavaScript',
-      stars: 38,
-      forks: 8,
-      lastUpdated: '2024-01-14T15:20:00Z',
-      defaultBranch: 'main',
-      cloneUrl: 'https://github.com/myorg/frontend-app.git',
-      enabled: false,
-      provider: 'github',
-    },
-    {
-      id: '3',
-      name: 'mobile-app',
-      fullName: 'myorg/mobile-app',
-      description: 'React Native mobile application',
-      private: true,
-      language: 'TypeScript',
-      stars: 15,
-      forks: 3,
-      lastUpdated: '2024-01-13T09:45:00Z',
-      defaultBranch: 'develop',
-      cloneUrl: 'https://github.com/myorg/mobile-app.git',
-      enabled: false,
-      provider: 'github',
-    },
-    {
-      id: '4',
-      name: 'data-processing',
-      fullName: 'myorg/data-processing',
-      description: 'Python data processing and analytics pipeline',
-      private: false,
-      language: 'Python',
-      stars: 67,
-      forks: 23,
-      lastUpdated: '2024-01-12T14:10:00Z',
-      defaultBranch: 'main',
-      cloneUrl: 'https://github.com/myorg/data-processing.git',
-      enabled: false,
-      provider: 'github',
-    },
-    {
-      id: '5',
-      name: 'devops-tools',
-      fullName: 'myorg/devops-tools',
-      description: 'Collection of DevOps utilities and scripts',
-      private: true,
-      language: 'Shell',
-      stars: 28,
-      forks: 7,
-      lastUpdated: '2024-01-11T16:30:00Z',
-      defaultBranch: 'main',
-      cloneUrl: 'https://github.com/myorg/devops-tools.git',
-      enabled: false,
-      provider: 'github',
-    },
-    {
-      id: '6',
-      name: 'microservice-auth',
-      fullName: 'myorg/microservice-auth',
-      description: 'Authentication microservice with JWT support',
-      private: false,
-      language: 'Go',
-      stars: 91,
-      forks: 34,
-      lastUpdated: '2024-01-10T11:20:00Z',
-      defaultBranch: 'main',
-      cloneUrl: 'https://github.com/myorg/microservice-auth.git',
-      enabled: false,
-      provider: 'github',
-    },
-  ];
+
 
   useEffect(() => {
     // Load repositories when component mounts or provider changes
@@ -183,7 +79,7 @@ const NewRepository: React.FC = () => {
     // Filter repositories based on search term
     const filtered = repositories.filter(repo =>
       repo.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      repo.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (repo.description && repo.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (repo.language && repo.language.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredRepositories(filtered);
@@ -191,12 +87,23 @@ const NewRepository: React.FC = () => {
 
   const loadRepositories = async () => {
     setLoading(true);
+    setError(null);
+    setAuthenticationRequired(false);
+    
     try {
-      // Mock API call to fetch repositories from selected provider
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setRepositories(mockRepositories.filter(repo => repo.provider === selectedProvider));
-    } catch (error) {
+      // Call real API to fetch repositories from GitHub
+      const repositories = await RemoteService.getGitHubRepositories();
+      setRepositories(repositories);
+    } catch (error: any) {
       console.error('Failed to load repositories:', error);
+      
+      // Check for 401 status in multiple ways to ensure we catch it
+      if (error.response?.status === 401 || error.status === 401) {
+        setAuthenticationRequired(true);
+        setError('Authentication required to access GitHub repositories');
+      } else {
+        setError('Failed to load repositories. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -205,13 +112,26 @@ const NewRepository: React.FC = () => {
   const syncRepositories = async () => {
     setSyncLoading(true);
     try {
-      // Mock API call to sync repositories from provider
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      await loadRepositories();
+      // Sync repositories from GitHub API
+      const repositories = await RemoteService.syncGitHubRepositories();
+      setRepositories(repositories);
     } catch (error) {
       console.error('Failed to sync repositories:', error);
+      setError('Failed to sync repositories. Please try again.');
     } finally {
       setSyncLoading(false);
+    }
+  };
+
+  const handleAuthentication = async () => {
+    try {
+      // Get GitHub authentication challenge URL
+      const challenge = await RemoteService.getGitHubAuthChallenge();
+      // Redirect to GitHub authentication
+      window.location.href = challenge.challengeUrl;
+    } catch (error) {
+      console.error('Failed to get authentication URL:', error);
+      setError('Failed to initiate authentication. Please try again.');
     }
   };
 
@@ -228,8 +148,8 @@ const NewRepository: React.FC = () => {
   const enableRepository = async (repoId: string) => {
     setLoading(true);
     try {
-      // Mock API call to enable repository
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Call API to enable repository
+      await RemoteService.enableRepository(repoId);
       
       setRepositories(prev => 
         prev.map(repo => 
@@ -239,10 +159,14 @@ const NewRepository: React.FC = () => {
       
       const repo = repositories.find(r => r.id === repoId);
       if (repo) {
-        navigate(`/repositories/${repo.fullName.split('/')[0]}/${repo.fullName.split('/')[1]}`);
+        // Extract owner and repo name from URL if fullName is not available
+        const fullName = repo.fullName || repo.url.split('/').slice(-2).join('/');
+        const [owner, repoName] = fullName.split('/');
+        navigate(`/repositories/${owner}/${repoName}`);
       }
     } catch (error) {
       console.error('Failed to enable repository:', error);
+      setError('Failed to enable repository. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -253,8 +177,8 @@ const NewRepository: React.FC = () => {
     
     setLoading(true);
     try {
-      // Mock API call to enable multiple repositories
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call API to enable multiple repositories
+      await RemoteService.enableMultipleRepositories(Array.from(selectedRepos));
       
       setRepositories(prev => 
         prev.map(repo => 
@@ -266,6 +190,7 @@ const NewRepository: React.FC = () => {
       navigate('/repositories');
     } catch (error) {
       console.error('Failed to enable repositories:', error);
+      setError('Failed to enable repositories. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -411,10 +336,34 @@ const NewRepository: React.FC = () => {
                 />
               </div>
 
+              {/* Error Message */}
+              {error && !authenticationRequired && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <div className="flex items-center">
+                    <ExclamationCircleIcon className="h-5 w-5 text-red-400 mr-2" />
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                </div>
+              )}
+
               {/* Repository List */}
               {loading ? (
                 <div className="flex items-center justify-center h-32">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+              ) : authenticationRequired ? (
+                <div className="text-center py-8">
+                  <CloudIcon className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Authentication Required</h3>
+                  <p className="text-gray-600 mb-4">
+                    Please authenticate with GitHub to view your repositories
+                  </p>
+                  <button 
+                    onClick={handleAuthentication}
+                    className="btn-primary"
+                  >
+                    Authenticate with GitHub
+                  </button>
                 </div>
               ) : filteredRepositories.length === 0 ? (
                 <div className="text-center py-8">
@@ -423,9 +372,9 @@ const NewRepository: React.FC = () => {
                   <p className="text-gray-600">
                     {searchTerm 
                       ? 'Try adjusting your search terms'
-                      : selectedProvider_obj?.connected 
-                        ? 'No repositories available for import'
-                        : `Connect to ${selectedProvider_obj?.name} to view repositories`
+                      : error
+                        ? 'Unable to load repositories'
+                        : 'No repositories available for import'
                     }
                   </p>
                 </div>
@@ -478,9 +427,19 @@ const NewRepository: React.FC = () => {
                                   {repo.language}
                                 </span>
                               )}
-                              <span>⭐ {repo.stars}</span>
-                              <span>🍴 {repo.forks}</span>
-                              <span>Updated {new Date(repo.lastUpdated).toLocaleDateString()}</span>
+                              {repo.stars !== undefined && <span>⭐ {repo.stars}</span>}
+                              {repo.forks !== undefined && <span>🍴 {repo.forks}</span>}
+                              {repo.lastUpdated && <span>Updated {new Date(repo.lastUpdated).toLocaleDateString()}</span>}
+                              {repo.url && (
+                                <a 
+                                  href={repo.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  View on GitHub
+                                </a>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -488,7 +447,11 @@ const NewRepository: React.FC = () => {
                         <div className="ml-4">
                           {repo.enabled ? (
                             <button
-                              onClick={() => navigate(`/repositories/${repo.fullName.split('/')[0]}/${repo.fullName.split('/')[1]}`)}
+                              onClick={() => {
+                                const fullName = repo.fullName || repo.url.split('/').slice(-2).join('/');
+                                const [owner, repoName] = fullName.split('/');
+                                navigate(`/repositories/${owner}/${repoName}`);
+                              }}
                               className="btn-secondary text-sm"
                             >
                               View Repository

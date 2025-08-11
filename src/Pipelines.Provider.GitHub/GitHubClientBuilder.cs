@@ -15,8 +15,7 @@ public  class GitHubClientBuilder
         var productHeader = new ProductHeaderValue("Pipelines");
         var client = new GitHubClient(productHeader);
 
-        _ = await _userStore.GetByEmailAsync("", CancellationToken.None);
-
+        await Task.CompletedTask;
         if (!string.IsNullOrEmpty(""))
         {
             var credentials = new Credentials("");

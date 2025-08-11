@@ -62,8 +62,28 @@ public sealed class GithubProvider : OAuthProvider, IRemoteProvider
         return uri.ToString();
     }
 
-    public Task ListAsync(CancellationToken cancellationToken)
+    public async Task<RepositoryList> ListAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var client = await _builder.CreateClientAsync();
+
+        var repositories = await client.Repository.GetAllForCurrent();
+
+        var items = repositories.Select(MapResponse);
+        return new RepositoryList
+        {
+            Count = items.Count(),
+            Items = items
+        };
+    }
+
+    private RepositoryItem MapResponse(Repository repository)
+    {
+        return new RepositoryItem
+        {
+            Id = repository.Id.ToString(),
+            Name = repository.Name,
+            Url = repository.Url,
+            Description = repository.Description,
+        };
     }
 }

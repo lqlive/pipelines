@@ -46,8 +46,24 @@ export class ApiClient {
       
       if (!response.ok) {
         // Handle error response
-        const errorData: ApiError = await response.json();
-        throw new Error(errorData.detail || errorData.title || 'API request failed');
+        let errorData: ApiError;
+        try {
+          errorData = await response.json();
+        } catch {
+          // If response is not JSON, create a basic error object
+          errorData = {
+            type: 'error',
+            title: 'Request Failed',
+            status: response.status,
+            detail: response.statusText || 'API request failed'
+          };
+        }
+        
+        // Create error with response status attached
+        const error = new Error(errorData.detail || errorData.title || 'API request failed') as any;
+        error.response = { status: response.status, data: errorData };
+        error.status = response.status;
+        throw error;
       }
 
       // If response status is 204 (No Content), return empty object
