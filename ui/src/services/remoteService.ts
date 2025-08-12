@@ -31,8 +31,6 @@ export interface GitHubAuthChallenge {
  * Service for managing remote Git providers (GitHub, GitLab, etc.)
  */
 export class RemoteService {
- 
-
   /**
    * Redirect to GitHub authorization challenge (same style as userService.loginWithProvider)
    * @param redirectUri Optional redirect target after authentication; defaults to current location

@@ -14,6 +14,7 @@ public static class RemoteApi
         api.MapGet("/{provider}/authorization/challenge", Challenge);
         api.MapGet("/{provider}/authorization/callback", Callback);
         api.MapGet("/{provider}/repositories", List);
+        api.MapGet("/{provider}/repositories/{repositoryId}/enable", Enable);
 
         return api;
     }
@@ -72,5 +73,22 @@ public static class RemoteApi
         }
 
         return TypedResults.Ok(result.Value);
+    }
+
+    private static async Task<Results<Ok, ProblemHttpResult>> Enable(
+     RemoteService service,
+     IdentityService identityService,
+     long repositoryId,
+     CancellationToken cancellationToken)
+    {
+        var userId = identityService.GetUserIdentity();
+        var result = await service.EnableAsync(Guid.Parse(userId), repositoryId, cancellationToken);
+
+        if (result.IsError)
+        {
+            return result.Errors.HandleErrors();
+        }
+
+        return TypedResults.Ok();
     }
 }

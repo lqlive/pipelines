@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Octokit;
 using Pipelines.Core.Provider;
-
 namespace Pipelines.Provider.GitHub;
 public sealed class GithubProvider : OAuthProvider, IRemoteProvider
 {
@@ -75,6 +74,14 @@ public sealed class GithubProvider : OAuthProvider, IRemoteProvider
             Items = items
         };
     }
+
+    public async Task<RepositoryItem> GetAsync(Guid userId, long repositoryId, CancellationToken cancellationToken = default)
+    {
+        var client = await _builder.CreateClientAsync(userId, cancellationToken);
+        var repository = await client.Repository.Get(repositoryId);
+        return MapResponse(repository);
+    }
+
     private RepositoryItem MapResponse(Repository repository)
     {
         return new RepositoryItem

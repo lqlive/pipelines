@@ -38,13 +38,13 @@ public static class UserApi
         }
 
         var email = context.User.FindFirst(ClaimTypes.Email)?.Value;
-        var name = context.User.FindFirst(ClaimTypes.Name)?.Value 
+        var name = context.User.FindFirst(ClaimTypes.Name)?.Value
                    ?? context.User.FindFirst(ClaimTypes.GivenName)?.Value
                    ?? context.User.Identity?.Name;
-        var avatar = context.User.FindFirst("picture")?.Value 
+        var avatar = context.User.FindFirst("picture")?.Value
                      ?? context.User.FindFirst("avatar_url")?.Value;
 
-       
+
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(name))
         {
             return TypedResults.Problem(
@@ -54,26 +54,26 @@ public static class UserApi
         }
 
         var ipAddress = context.GetClientIpAddress();
-        var request = new LoginWithRequest 
-        { 
-            Email = email, 
+        var request = new LoginWithRequest
+        {
+            Email = email,
             UserName = name,
             Avatar = avatar
         };
 
         var result = await userService.LoginWithAsync(request, ipAddress, cancellationToken);
-        
+
         if (result.IsError)
         {
             return result.Errors.HandleErrors();
         }
 
         await SignInUserAsync(context, result.Value);
-        
+
         return Results.Redirect(redirectUri);
     }
 
-    private static IResult Challenge(string provider,string redirectUri)
+    private static IResult Challenge(string provider, string redirectUri)
     {
         return Results.Challenge(
            new AuthenticationProperties { RedirectUri = $"/api/users/login/with?redirectUri={redirectUri}" },
@@ -116,7 +116,7 @@ public static class UserApi
     }
 
     private static async Task<Results<Ok<UserResponse>, ProblemHttpResult>> GetCurrentUser(
-        HttpContext context, 
+        HttpContext context,
         UserService userService,
         CancellationToken cancellationToken)
     {
@@ -154,6 +154,7 @@ public static class UserApi
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return TypedResults.Ok();
     }
+
     private static async Task SignInUserAsync(HttpContext context, UserResponse user)
     {
         var claims = new List<Claim>

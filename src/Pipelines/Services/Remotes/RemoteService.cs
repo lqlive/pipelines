@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Authentication;
 
+using Pipelines.Core.Entities.Repositories;
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Provider;
 using Pipelines.Core.Stores;
@@ -10,7 +11,10 @@ using Pipelines.Provider.GitHub;
 
 namespace Pipelines.Services.Remotes;
 
-public class RemoteService(GithubProvider remoteProvider,IUserStore userStore,ILogger<RemoteService> logger)
+public class RemoteService(GithubProvider remoteProvider,
+    IUserStore userStore,
+    IRepositoryStore repositoryStore,
+    ILogger<RemoteService> logger)
 {
     public Task<string> GetChallengeUrlAsync(HttpContext context, AuthenticationProperties? properties = null, CancellationToken cancellationToken = default)
     {
@@ -49,6 +53,29 @@ public class RemoteService(GithubProvider remoteProvider,IUserStore userStore,IL
             var result = await remoteProvider.ListAsync(userId, cancellationToken);
 
             return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "");
+            return RemoteErrors.Unauthorized;
+        }
+    }
+
+    public async Task<ErrorOr<Success>> EnableAsync(Guid userId, long repositoryId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var repository = await remoteProvider.GetAsync(userId, repositoryId, cancellationToken);
+            var newRepository = new Repository
+            {
+                RawId = repository.Id,
+                Name = repository.Name,
+                Url = repository.Url,
+                Provider = GitProvider.GitHub
+            };
+
+            await repositoryStore.CreateAsync(newRepository, cancellationToken);
+            return Result.Success;
         }
         catch (Exception ex)
         {
