@@ -17,8 +17,9 @@ public class GitHubClientBuilder
 
         if (userId is not null)
         {
-            await _userStore.GetByIdAsync(userId.Value, cancellation);
-            var credentials = new Credentials("");
+            var user = await _userStore.GetByIdAsync(userId.Value, cancellation);
+            var provider = user?.Providers?.SingleOrDefault(x => x.Name == "GitHub");
+            var credentials = new Credentials(provider?.AccessToken);
             client.Credentials = credentials;
         }
 

@@ -13,7 +13,6 @@ public class User
     public DateTimeOffset? EmailVerificationTokenExpiry { get; set; }
     public string? PasswordResetToken { get; set; }
     public DateTimeOffset? PasswordResetTokenExpiry { get; set; }
-    public UserProvider Provider { get; set; }
     public int FailedLoginAttempts { get; set; } = 0;
     public DateTimeOffset? LockoutEnd { get; set; }
     public DateTimeOffset? LastLoginTime { get; set; }
@@ -23,4 +22,6 @@ public class User
     public bool IsDeleted { get; set; } = false;
     public DateTimeOffset? DeletedAt { get; set; }
     public UserSetting? Setting { get; set; }
+    public List<UserProvider>? Providers { get; set; }
+    public List<UserLoginMethod>? LoginMethods { get; set; }
 }

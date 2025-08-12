@@ -9,5 +9,4 @@ public class UserResponse
     public string? Email { get; set; }
     public string? Avatar { get; set; }
     public UserStatus Status { get; set; } = UserStatus.Active;
-    public UserProvider Provider { get; set; }
 }

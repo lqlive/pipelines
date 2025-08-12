@@ -1,4 +1,4 @@
-import { apiClient } from './api';
+import { apiClient, OAUTH_BASE_URL } from './api';
 
 export interface RemoteRepository {
   id: string;
@@ -31,18 +31,16 @@ export interface GitHubAuthChallenge {
  * Service for managing remote Git providers (GitHub, GitLab, etc.)
  */
 export class RemoteService {
+ 
+
   /**
-   * Get GitHub authorization challenge URL
-   * @returns Promise with challenge URL for GitHub OAuth
+   * Redirect to GitHub authorization challenge (same style as userService.loginWithProvider)
+   * @param redirectUri Optional redirect target after authentication; defaults to current location
    */
-  static async getGitHubAuthChallenge(): Promise<GitHubAuthChallenge> {
-    try {
-      const response = await apiClient.get<GitHubAuthChallenge>('/api/remotes/github/authorization/challenge');
-      return response;
-    } catch (error) {
-      console.error('Failed to get GitHub auth challenge:', error);
-      throw error;
-    }
+  static loginWithGitHub(redirectUri?: string): void {
+    const finalRedirectUri = redirectUri || window.location.href;
+    const challengeUrl = `${OAUTH_BASE_URL}/api/remotes/github/authorization/challenge?redirectUri=${encodeURIComponent(finalRedirectUri)}`;
+    window.location.href = challengeUrl;
   }
 
   /**

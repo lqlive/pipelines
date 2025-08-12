@@ -20,11 +20,16 @@ public static class RemoteApi
     private static async Task<IResult> Challenge(
         HttpContext context,
         string provider,
+        string redirectUri,
         RemoteService service,
         CancellationToken cancellationToken)
     {
         // Create AuthenticationProperties with minimal customization
-        var properties = new AuthenticationProperties();
+        var properties = new AuthenticationProperties()
+        {
+            RedirectUri = $"/api/remotes/github/authorization/callback?redirectUri={redirectUri}",
+        };
+
         var result = await service.GetChallengeUrlAsync(context, properties, cancellationToken);
 
         return TypedResults.Redirect(result);
@@ -33,12 +38,24 @@ public static class RemoteApi
     private static async Task<IResult> Callback(
        HttpContext context,
        RemoteService service,
+       IdentityService identityService,
        string code,
+       string redirectUri,
        CancellationToken cancellationToken)
     {
         var properties = new AuthenticationProperties();
-        var result = await service.CreateTicketAsync(code, properties, cancellationToken);
-        return TypedResults.Json(result);
+        var ticket = await service.CreateTicketAsync(code, properties, cancellationToken);
+        var userId = identityService.GetUserIdentity();
+
+        var accessToken = ticket.Properties?.GetTokenValue("access_token") ?? string.Empty;
+        var result = await service.CallbackAsync(Guid.Parse(userId), accessToken, cancellationToken);
+
+        if (result.IsError)
+        {
+            return result.Errors.HandleErrors();
+        }
+
+        return TypedResults.Redirect(redirectUri);
     }
 
     private static async Task<Results<Ok<RepositoryList>, ProblemHttpResult>> List(

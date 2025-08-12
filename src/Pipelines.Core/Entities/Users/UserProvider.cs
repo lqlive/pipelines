@@ -1,8 +1,11 @@
 ﻿namespace Pipelines.Core.Entities.Users;
-public enum UserProvider
+public class UserProvider
 {
-    None = 1,
-    GitHub = 2,
-    Microsoft = 3,
-    Google = 4
+    public Guid Id { get; set; }
+    public Guid UserId { get; set; }
+    public required string Name { get; set; }
+    public required string AccessToken { get; set; }
+    public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
+    public User User { get; set; } = null!;
 }

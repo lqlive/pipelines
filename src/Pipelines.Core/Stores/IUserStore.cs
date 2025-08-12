@@ -8,4 +8,5 @@ public interface IUserStore
     Task<bool> CreateAsync(User user, CancellationToken cancellationToken);
     Task<bool> UpdateAsync(User user, CancellationToken cancellationToken);
     Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken);
+    Task<bool> CreateProviderAsync(User user, UserProvider provider, CancellationToken cancellationToken);
 }

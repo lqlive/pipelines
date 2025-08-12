@@ -123,16 +123,9 @@ const NewRepository: React.FC = () => {
     }
   };
 
-  const handleAuthentication = async () => {
-    try {
-      // Get GitHub authentication challenge URL
-      const challenge = await RemoteService.getGitHubAuthChallenge();
-      // Redirect to GitHub authentication
-      window.location.href = challenge.challengeUrl;
-    } catch (error) {
-      console.error('Failed to get authentication URL:', error);
-      setError('Failed to initiate authentication. Please try again.');
-    }
+  const handleAuthentication = () => {
+    // Redirect to GitHub authentication using service helper
+    RemoteService.loginWithGitHub(window.location.href);
   };
 
   const toggleRepositorySelection = (repoId: string) => {

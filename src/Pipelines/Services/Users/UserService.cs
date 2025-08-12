@@ -18,9 +18,9 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             existingUser.LastLoginTime = DateTimeOffset.UtcNow;
             existingUser.UpdatedAt = DateTimeOffset.UtcNow;
             existingUser.FailedLoginAttempts = 0;
-     
-          
+
             await userStore.UpdateAsync(existingUser, cancellationToken);
+            
             return MapToUser(existingUser);
         }
 
@@ -30,7 +30,6 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             Email = request.Email,
             Avatar = request.Avatar,
             Status = UserStatus.Active,
-            Provider = UserProvider.None, 
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             LastLoginTime = DateTimeOffset.UtcNow,
@@ -144,7 +143,6 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             Name = request.Name,
             Email = request.Email,
             Status = UserStatus.Active,
-            Provider = UserProvider.None,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             FailedLoginAttempts = 0,
@@ -176,8 +174,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             Name = user.Name,
             Email = user.Email,
             Avatar = user.Avatar,
-            Status = user.Status,
-            Provider = user.Provider
+            Status = user.Status
         };
     }
 }

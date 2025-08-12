@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Management;
 using Pipelines.Provider.GitHub;
+using Pipelines.Services.Identity;
 using Pipelines.Services.Remotes;
 using Pipelines.Services.Users;
 using Pipelines.Session;
@@ -38,7 +39,9 @@ builder.Services.AddStackExchangeRedisCache(options => { options.Configuration =
 builder.Services.AddScoped<DistributedTicketStore>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RemoteService>();
+builder.Services.AddScoped<IdentityService>();
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie((options) =>

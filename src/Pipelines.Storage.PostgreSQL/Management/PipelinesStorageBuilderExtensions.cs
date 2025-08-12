@@ -17,6 +17,8 @@ public static class PipelinesStorageBuilderExtensions
         services.AddDbContext<PostgreSQLContext>();
 
         services.TryAddTransient<IUserStore, UserStore>();
+        services.TryAddTransient<IRepositoryStore, RepositoryStore>();
+
         return application;
     }
 }

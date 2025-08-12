@@ -51,7 +51,7 @@ public sealed class GithubProvider : OAuthProvider, IRemoteProvider
         AuthenticationProperties? properties = null,
         CancellationToken cancellationToken = default)
     {
-        var redirectUri = BuildRedirectUri(context, _options.CallbackPath);
+        var redirectUri = BuildRedirectUri(context, properties?.RedirectUri ?? _options.CallbackPath);
         var request = new OauthLoginRequest(_options.ClientId)
         {
             RedirectUri = new Uri(redirectUri),

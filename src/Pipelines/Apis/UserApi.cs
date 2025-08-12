@@ -162,8 +162,8 @@ public static class UserApi
             new(ClaimTypes.Name, user.Name),
             new(ClaimTypes.Email, user.Email?? string.Empty),
             new(ClaimTypes.Role,"user"),
-            new("provider", user.Provider.ToString()),
-            new("role", "user")
+            new("role", "user"),
+            new("sub", user.Id.ToString()),
         };
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
