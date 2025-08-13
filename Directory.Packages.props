@@ -13,5 +13,6 @@
 	 <PackageVersion Include="Microsoft.Extensions.Caching.StackExchangeRedis"  Version="9.0.7"/>
 	 <PackageVersion Include="ErrorOr" Version="2.0.1"/>
 	 <PackageVersion Include="Octokit" Version="14.0.0" />
+	 <PackageVersion Include="Docker.DotNet" Version=" 3.125.15" />
   </ItemGroup>
 </Project>
