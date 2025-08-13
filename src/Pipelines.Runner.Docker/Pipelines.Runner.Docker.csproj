@@ -9,10 +9,22 @@
 
   <ItemGroup>
     <PackageReference Include="Docker.DotNet" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Core.Api" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Tools">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Pipelines.Core\Pipelines.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="..\Pipelines.Core\Protos\runner.proto" GrpcServices="Client" />
+    <Protobuf Include="..\Pipelines.Core\Protos\joblog.proto" GrpcServices="Client" />
   </ItemGroup>
 
 </Project>

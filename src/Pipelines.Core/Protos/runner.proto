@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+option csharp_namespace = "Pipelines.Proto";
+
+package pipelines.runner;
+
+message RegisterRunnerRequest {
+  string name = 1;
+  repeated string capabilities = 2;
+  int32 max_concurrent_jobs = 3;
+  string version = 4;
+  string platform = 5;
+  map<string, string> labels = 6;
+}
+
+message RegisterRunnerResponse {
+  string runner_id = 1;
+}
+
+message HeartbeatRequest {
+  string runner_id = 1;
+}
+
+message HeartbeatResponse {}
+
+message JobRequest {
+  string runner_id = 1;
+}
+
+message Step {
+  string id = 1;
+  string image = 2;
+  string script = 3;
+}
+
+message Build {
+  string id = 1;
+  string repository = 2;
+  int32 timeout_seconds = 3;
+  repeated Step steps = 4;
+}
+
+message JobAssignment {
+  bool has_job = 1;
+  Build build = 2;
+}
+
+message ReportResultRequest {
+  string runner_id = 1;
+  string build_id = 2;
+  int32 status = 3; // map to Pipelines.Core.Entities.Builds.BuildStatus
+}
+
+message ReportResultResponse {}
+
+service RunnerService {
+  rpc RegisterRunner(RegisterRunnerRequest) returns (RegisterRunnerResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  rpc RequestJob(JobRequest) returns (JobAssignment);
+  rpc ReportResult(ReportResultRequest) returns (ReportResultResponse);
+}
+
+

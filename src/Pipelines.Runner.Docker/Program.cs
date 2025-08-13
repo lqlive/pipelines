@@ -7,20 +7,10 @@ using Pipelines.Core.Runner;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 var builder = Host.CreateApplicationBuilder(args);
 
-// HTTP clients for different services
-builder.Services.AddHttpClient("pipelines-server", c =>
-{
-    var baseUrl = Environment.GetEnvironmentVariable("PIPELINES_SERVER") ?? "http://localhost:5169";
-    c.BaseAddress = new Uri(baseUrl);
-});
-
-builder.Services.AddHttpClient("scheduler-server", c =>
-{
-    var baseUrl = Environment.GetEnvironmentVariable("SCHEDULER_SERVER") ?? "http://localhost:5170";
-    c.BaseAddress = new Uri(baseUrl);
-});
+// No HTTP clients needed when using gRPC
 
 // Runner configuration
 builder.Services.AddSingleton(new RunnerConfiguration
@@ -38,7 +28,7 @@ builder.Services.AddSingleton<RunnerRegistrationService>();
 builder.Services.AddHostedService<RunnerRegistrationService>();
 builder.Services.AddHostedService<RunnerService>();
 builder.Services.AddSingleton<IJobServer, HttpJobServer>();
-builder.Services.AddSingleton<IJobServerQueue, HttpJobServerQueue>();
+builder.Services.AddSingleton<IJobServerQueue, GrpcJobServerQueue>();
 
 var app = builder.Build();
 await app.RunAsync();

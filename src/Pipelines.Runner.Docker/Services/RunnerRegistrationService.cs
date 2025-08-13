@@ -1,8 +1,8 @@
 using Pipelines.Core.Scheduling;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System.Net.Http.Json;
-using System.Text.Json;
+using Grpc.Net.Client;
+using Pipelines.Proto;
 
 namespace Pipelines.Runner.Docker.Services;
 
@@ -11,18 +11,19 @@ namespace Pipelines.Runner.Docker.Services;
 /// </summary>
 public class RunnerRegistrationService : BackgroundService
 {
-    private readonly HttpClient _http;
+    private readonly RunnerService.RunnerServiceClient _client;
     private readonly ILogger<RunnerRegistrationService> _logger;
     private readonly RunnerConfiguration _config;
     private string? _runnerId;
     private readonly PeriodicTimer _heartbeatTimer;
 
     public RunnerRegistrationService(
-        IHttpClientFactory factory,
         ILogger<RunnerRegistrationService> logger,
         RunnerConfiguration config)
     {
-        _http = factory.CreateClient("scheduler-server");
+        var baseUrl = Environment.GetEnvironmentVariable("SCHEDULER_SERVER") ?? "http://localhost:5170";
+        var channel = GrpcChannel.ForAddress(baseUrl);
+        _client = new RunnerService.RunnerServiceClient(channel);
         _logger = logger;
         _config = config;
         _heartbeatTimer = new PeriodicTimer(TimeSpan.FromSeconds(30)); // Heartbeat every 30 seconds
@@ -61,11 +62,7 @@ public class RunnerRegistrationService : BackgroundService
         }
         finally
         {
-            // Unregister on shutdown
-            if (_runnerId != null)
-            {
-                await UnregisterAsync();
-            }
+            // Unregister on shutdown (not implemented in gRPC yet)
         }
     }
 
@@ -73,29 +70,17 @@ public class RunnerRegistrationService : BackgroundService
     {
         try
         {
-            var request = new
+            var resp = await _client.RegisterRunnerAsync(new RegisterRunnerRequest
             {
                 Name = _config.Name,
-                Capabilities = _config.Capabilities,
+                Capabilities = { _config.Capabilities },
                 MaxConcurrentJobs = _config.MaxConcurrentJobs,
                 Version = _config.Version,
                 Platform = Environment.OSVersion.Platform.ToString(),
-                Labels = _config.Labels
-            };
-
-            var response = await _http.PostAsJsonAsync("/api/runners/register", request, cancellationToken);
-            
-            if (response.IsSuccessStatusCode)
-            {
-                var result = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken: cancellationToken);
-                _runnerId = result.GetProperty("RunnerId").GetString();
-                _logger.LogInformation("Successfully registered runner: {RunnerId}", _runnerId);
-            }
-            else
-            {
-                _logger.LogError("Failed to register runner: {StatusCode} - {Content}", 
-                    response.StatusCode, await response.Content.ReadAsStringAsync(cancellationToken));
-            }
+                Labels = { _config.Labels }
+            }, cancellationToken: cancellationToken);
+            _runnerId = resp.RunnerId;
+            _logger.LogInformation("Successfully registered runner: {RunnerId}", _runnerId);
         }
         catch (Exception ex)
         {
@@ -109,20 +94,7 @@ public class RunnerRegistrationService : BackgroundService
 
         try
         {
-            var response = await _http.PostAsync($"/api/runners/{_runnerId}/heartbeat", null, cancellationToken);
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("Heartbeat failed: {StatusCode}", response.StatusCode);
-                
-                // If runner not found, re-register
-                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    _logger.LogInformation("Runner not found on server, re-registering...");
-                    _runnerId = null;
-                    await RegisterAsync(cancellationToken);
-                }
-            }
+            await _client.HeartbeatAsync(new HeartbeatRequest { RunnerId = _runnerId }, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -130,20 +102,7 @@ public class RunnerRegistrationService : BackgroundService
         }
     }
 
-    private async Task UnregisterAsync()
-    {
-        if (_runnerId == null) return;
-
-        try
-        {
-            await _http.DeleteAsync($"/api/runners/{_runnerId}");
-            _logger.LogInformation("Runner unregistered: {RunnerId}", _runnerId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Error unregistering runner");
-        }
-    }
+    // private async Task UnregisterAsync() { }
 
     public override void Dispose()
     {

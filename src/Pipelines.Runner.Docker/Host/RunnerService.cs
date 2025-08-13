@@ -57,7 +57,7 @@ public class RunnerService : BackgroundService
                 }
 
                 _logger.LogInformation("Received build {BuildId} for repository {Repository}", 
-                    build.Id, build.Repository);
+                    build.Id, build.RepositoryUrl);
 
                 await _jobRunner.RunAsync(build, stoppingToken);
                 
