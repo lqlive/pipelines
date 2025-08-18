@@ -68,8 +68,6 @@ const NewRepository: React.FC = () => {
     },
   ];
 
-
-
   useEffect(() => {
     // Load repositories when component mounts or provider changes
     loadRepositories();

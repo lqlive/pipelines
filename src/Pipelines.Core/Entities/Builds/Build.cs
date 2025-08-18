@@ -1,17 +1,8 @@
 namespace Pipelines.Core.Entities.Builds;
 
-public enum BuildStatus
-{
-    Pending = 0,
-    Running = 1,
-    Succeeded = 2,
-    Failed = 3,
-    Canceled = 4
-}
-
 public class Build
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid Id { get; set; }
     public required string RepositoryUrl { get; set; }
     public string? CommitRef { get; set; }
     public BuildStatus Status { get; set; } = BuildStatus.Pending;
@@ -23,4 +14,9 @@ public class Build
     public bool CancelInProgress { get; set; } = false;
     public bool CancellationRequested { get; set; } = false;
     public List<Step> Steps { get; set; } = new();
+
+    /// <summary>
+    /// Navigation property to all logs for this build (including step-level and build-level logs)
+    /// </summary>
+    public List<Log> Logs { get; set; } = new();
 }
