@@ -41,7 +41,6 @@ builder.Services.AddScoped<DistributedTicketStore>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RemoteService>();
 builder.Services.AddScoped<IdentityService>();
-
 builder.Services.AddScoped<BuildService>();
 
 builder.Services.AddHttpContextAccessor();

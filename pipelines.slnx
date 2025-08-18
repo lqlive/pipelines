@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Pipelines.Core/Pipelines.Core.csproj" />
+    <Project Path="src/Pipelines.Provider.GitHub/Pipelines.Provider.GitHub.csproj" />
+    <Project Path="src/Pipelines.Runner.Docker/Pipelines.Runner.Docker.csproj" />
+    <Project Path="src/Pipelines.Runner.Listener/Pipelines.Runner.Listener.csproj" />
+    <Project Path="src/Pipelines.Storage.PostgreSQL/Pipelines.Storage.PostgreSQL.csproj" />
+    <Project Path="src/Pipelines/Pipelines.csproj" />
+  </Folder>
+</Solution>
