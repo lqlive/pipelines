@@ -8,10 +8,10 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-	<PackageReference Include="AspNet.Security.OAuth.GitHub" />
-	<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" />
-	<PackageReference Include="ErrorOr" />
-	<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
+	  <PackageReference Include="AspNet.Security.OAuth.GitHub" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" />
+	  <PackageReference Include="ErrorOr" />
+	  <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
   </ItemGroup>
 
   <ItemGroup>

@@ -21,10 +21,4 @@
   <ItemGroup>
     <ProjectReference Include="..\Pipelines.Core\Pipelines.Core.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\Pipelines.Core\Protos\runner.proto" GrpcServices="Client" />
-    <Protobuf Include="..\Pipelines.Core\Protos\joblog.proto" GrpcServices="Client" />
-  </ItemGroup>
-
 </Project>

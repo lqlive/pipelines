@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Identity;
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Management;
-using Pipelines.Core.Clients;
 using Pipelines.Provider.GitHub;
 using Pipelines.Services.Identity;
 using Pipelines.Services.Remotes;
 using Pipelines.Services.Builds;
-using Pipelines.Services.Clients;
 using Pipelines.Services.Users;
 using Pipelines.Session;
 using Pipelines.Storage.PostgreSQL.Management;
@@ -44,17 +42,7 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RemoteService>();
 builder.Services.AddScoped<IdentityService>();
 
-// External services communication
-builder.Services.AddHttpClient("scheduler", c =>
-{
-    var baseUrl = Environment.GetEnvironmentVariable("SCHEDULER_SERVER") ?? "http://localhost:5170";
-    c.BaseAddress = new Uri(baseUrl);
-});
-
-// Service clients
-builder.Services.AddScoped<ISchedulerClient, HttpSchedulerClient>();
 builder.Services.AddScoped<BuildService>();
-builder.Services.AddSingleton<LogStorageService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();
