@@ -21,6 +21,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Directory.Packages.props = Directory.Packages.props
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pipelines.Runner.Listener", "src\Pipelines.Runner.Listener\Pipelines.Runner.Listener.csproj", "{75F2BA6D-FCC1-A8F5-8CD0-6BB2FA5287F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{0BA7EF14-0AF8-4424-AA0E-EB5FC02EFF89}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0BA7EF14-0AF8-4424-AA0E-EB5FC02EFF89}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0BA7EF14-0AF8-4424-AA0E-EB5FC02EFF89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75F2BA6D-FCC1-A8F5-8CD0-6BB2FA5287F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75F2BA6D-FCC1-A8F5-8CD0-6BB2FA5287F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75F2BA6D-FCC1-A8F5-8CD0-6BB2FA5287F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75F2BA6D-FCC1-A8F5-8CD0-6BB2FA5287F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -57,6 +63,7 @@ Global
 		{662320FE-F97E-923F-973C-D8420AA40946} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{AE46F329-D664-4A22-8A8B-EA90B355493B} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{0BA7EF14-0AF8-4424-AA0E-EB5FC02EFF89} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{75F2BA6D-FCC1-A8F5-8CD0-6BB2FA5287F7} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {37B584D9-7217-4603-9AE9-28D4D8DEF7F5}

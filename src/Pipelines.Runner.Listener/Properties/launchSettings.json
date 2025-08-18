@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "Pipelines.Runner.Listener": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:57555;http://localhost:57556"
+    }
+  }
+}
