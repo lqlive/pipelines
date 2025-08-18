@@ -2,13 +2,11 @@ using Microsoft.AspNetCore.Identity;
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Management;
 using Pipelines.Provider.GitHub;
-using Pipelines.Services.Identity;
 using Pipelines.Services.Remotes;
-using Pipelines.Services.Builds;
-using Pipelines.Services.Users;
 using Pipelines.Session;
 using Pipelines.Storage.PostgreSQL.Management;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Pipelines.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +39,7 @@ builder.Services.AddScoped<DistributedTicketStore>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RemoteService>();
 builder.Services.AddScoped<IdentityService>();
+builder.Services.AddScoped<RepositoryService>();
 builder.Services.AddScoped<BuildService>();
 
 builder.Services.AddHttpContextAccessor();
@@ -88,5 +87,6 @@ app.UseAuthorization();
 app.MapUserApiV1();
 app.MapRemoteApiV1();
 app.MapBuildApi();
+app.MapRepositoryApiV1();
 
 app.Run();

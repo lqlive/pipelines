@@ -141,8 +141,8 @@ const NewRepository: React.FC = () => {
   const enableRepository = async (repoId: string) => {
     setLoading(true);
     try {
-      // Call API to enable repository
-      await RemoteService.enableRepository(repoId);
+      // Call API to enable repository using remote service
+      await RemoteService.enableGitHubRepository(repoId);
       
       setRepositories(prev => 
         prev.map(repo => 
@@ -168,14 +168,25 @@ const NewRepository: React.FC = () => {
   const enableSelectedRepositories = async () => {
     if (selectedRepos.size === 0) return;
     
+    // Filter out already enabled repositories
+    const reposToEnable = Array.from(selectedRepos).filter(repoId => {
+      const repo = repositories.find(r => r.id === repoId);
+      return repo && !repo.enabled;
+    });
+    
+    if (reposToEnable.length === 0) {
+      setError('Selected repositories are already enabled.');
+      return;
+    }
+    
     setLoading(true);
     try {
-      // Call API to enable multiple repositories
-      await RemoteService.enableMultipleRepositories(Array.from(selectedRepos));
+      // Call API to enable multiple repositories using remote service
+      await RemoteService.enableGitHubRepositories(reposToEnable);
       
       setRepositories(prev => 
         prev.map(repo => 
-          selectedRepos.has(repo.id) ? { ...repo, enabled: true } : repo
+          reposToEnable.includes(repo.id) ? { ...repo, enabled: true } : repo
         )
       );
       
@@ -192,6 +203,12 @@ const NewRepository: React.FC = () => {
   const selectedProvider_obj = gitProviders.find(p => p.id === selectedProvider);
   const enabledCount = repositories.filter(repo => repo.enabled).length;
   const availableCount = repositories.filter(repo => !repo.enabled).length;
+  
+  // Count selected repositories that are not yet enabled
+  const selectedAvailableCount = Array.from(selectedRepos).filter(repoId => {
+    const repo = repositories.find(r => r.id === repoId);
+    return repo && !repo.enabled;
+  }).length;
 
   return (
     <div className="fade-in">
@@ -294,7 +311,7 @@ const NewRepository: React.FC = () => {
                 <h2 className="text-lg font-semibold text-gray-900">
                   {selectedProvider_obj?.name} Repositories
                 </h2>
-                {selectedRepos.size > 0 && (
+                {selectedAvailableCount > 0 && (
                   <button
                     onClick={enableSelectedRepositories}
                     disabled={loading}
@@ -305,7 +322,7 @@ const NewRepository: React.FC = () => {
                     ) : (
                       <PlusIcon className="h-4 w-4 mr-2" />
                     )}
-                    Enable {selectedRepos.size} Repository{selectedRepos.size > 1 ? 'ies' : 'y'}
+                    Enable {selectedAvailableCount} Repository{selectedAvailableCount > 1 ? 'ies' : 'y'}
                   </button>
                 )}
               </div>
@@ -423,9 +440,9 @@ const NewRepository: React.FC = () => {
                               {repo.stars !== undefined && <span>⭐ {repo.stars}</span>}
                               {repo.forks !== undefined && <span>🍴 {repo.forks}</span>}
                               {repo.lastUpdated && <span>Updated {new Date(repo.lastUpdated).toLocaleDateString()}</span>}
-                              {repo.url && (
+                              {repo.cloneUrl && (
                                 <a 
-                                  href={repo.url} 
+                                  href={repo.cloneUrl} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
                                   className="text-blue-600 hover:text-blue-800"
@@ -441,9 +458,11 @@ const NewRepository: React.FC = () => {
                           {repo.enabled ? (
                             <button
                               onClick={() => {
-                                const fullName = repo.fullName || repo.url.split('/').slice(-2).join('/');
+                                const fullName = repo.fullName || repo.cloneUrl?.split('/').slice(-2).join('/') || '';
                                 const [owner, repoName] = fullName.split('/');
-                                navigate(`/repositories/${owner}/${repoName}`);
+                                if (owner && repoName) {
+                                  navigate(`/repositories/${owner}/${repoName}`);
+                                }
                               }}
                               className="btn-secondary text-sm"
                             >

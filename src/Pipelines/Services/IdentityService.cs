@@ -1,4 +1,4 @@
-﻿namespace Pipelines.Services.Identity;
+﻿namespace Pipelines.Services;
 
 public class IdentityService(IHttpContextAccessor context)
 {

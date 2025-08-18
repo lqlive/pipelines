@@ -6,15 +6,15 @@ using Microsoft.Extensions.Options;
 using Octokit;
 using Pipelines.Core.Provider;
 namespace Pipelines.Provider.GitHub;
-public sealed class GithubProvider : OAuthProvider, IRemoteProvider
+public sealed class GitHubProvider : OAuthProvider, IRemoteProvider
 {
     private readonly GitHubClientBuilder _builder;
     private readonly GitHubRemoteOptions _options;
-    private readonly ILogger<GithubProvider> _logger;
-    public GithubProvider(
+    private readonly ILogger<GitHubProvider> _logger;
+    public GitHubProvider(
         GitHubClientBuilder builder,
         IOptionsMonitor<GitHubRemoteOptions> options,
-        ILogger<GithubProvider> logger)
+        ILogger<GitHubProvider> logger)
     {
         _builder = builder;
         _options = options.CurrentValue;
@@ -86,9 +86,9 @@ public sealed class GithubProvider : OAuthProvider, IRemoteProvider
     {
         return new RepositoryItem
         {
-            Id = repository.Id.ToString(),
+            Id = repository.Id,
             Name = repository.Name,
-            Url = repository.Url,
+            CloneUrl = repository.CloneUrl,
             Description = repository.Description,
         };
     }

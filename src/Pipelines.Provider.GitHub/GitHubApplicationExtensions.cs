@@ -8,7 +8,7 @@ public static class GitHubApplicationExtensions
     {
         app.Services.AddScoped<GitHubClientBuilder>();
 
-        app.Services.AddScoped<GithubProvider>();
+        app.Services.AddScoped<GitHubProvider>();
         
         return app;
     }

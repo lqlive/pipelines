@@ -22,7 +22,6 @@ public class UserStore(IContext context) : IUserStore
         }
     }
 
-
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var user = await context.Users.Include(x => x.Setting).SingleOrDefaultAsync(x => x.Id == id);

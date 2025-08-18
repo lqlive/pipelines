@@ -5,7 +5,7 @@ using Pipelines.Core.Stores;
 using Pipelines.Errors;
 using Pipelines.Models.Users;
 
-namespace Pipelines.Services.Users;
+namespace Pipelines.Services;
 
 public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHasher,ILogger<UserService> logger)
 {
@@ -21,7 +21,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
 
             await userStore.UpdateAsync(existingUser, cancellationToken);
             
-            return MapToUser(existingUser);
+            return MapToResponse(existingUser);
         }
 
         var newUser = new User 
@@ -38,7 +38,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
         };
         
         await userStore.CreateAsync(newUser, cancellationToken);
-        return MapToUser(newUser);
+        return MapToResponse(newUser);
     }
 
     public async Task<ErrorOr<Success>> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken)
@@ -98,7 +98,7 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             await userStore.UpdateAsync(user, cancellationToken);
         }
 
-        return MapToUser(user);
+        return MapToResponse(user);
     }
 
     private async Task HandleLoginFailedAsync(User user, CancellationToken cancellationToken)
@@ -163,10 +163,10 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             return statusError.FirstError;
         }
 
-        return MapToUser(user);
+        return MapToResponse(user);
     }
 
-    private UserResponse MapToUser(User user)
+    private UserResponse MapToResponse(User user)
     {
         return new UserResponse
         {

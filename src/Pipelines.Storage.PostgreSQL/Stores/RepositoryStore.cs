@@ -21,4 +21,9 @@ public class RepositoryStore(IContext context) : IRepositoryStore
             return false;
         }
     }
+
+    public async Task<IEnumerable<Repository>> ListAsync(CancellationToken cancellationToken)
+    {
+        return await context.Repositories.ToListAsync();
+    }
 }

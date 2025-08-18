@@ -39,4 +39,16 @@ public static class UserErrors
     public static Error AccountLocked(DateTimeOffset lockoutEnd) => Error.Validation(
         code: "User.AccountLocked",
         description: $"Account is locked until {lockoutEnd:yyyy-MM-dd HH:mm:ss}");
+
+    public static readonly Error NotAuthenticated = Error.Unauthorized(
+        code: "User.NotAuthenticated",
+        description: "User is not authenticated");
+
+    public static readonly Error IncompleteUserInformation = Error.Validation(
+        code: "User.IncompleteUserInformation",
+        description: "Unable to obtain required user information (email and name) from external provider");
+
+    public static readonly Error InvalidUserClaims = Error.Unauthorized(
+        code: "User.InvalidUserClaims",
+        description: "User ID not found in claims");
 }

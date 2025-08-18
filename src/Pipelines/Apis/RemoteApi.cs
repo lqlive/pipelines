@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.HttpResults;
+
 using Pipelines.Core.Provider;
 using Pipelines.Extensions;
-using Pipelines.Services.Identity;
+using Pipelines.Models.Remotes;
+using Pipelines.Services;
 using Pipelines.Services.Remotes;
 
 public static class RemoteApi
@@ -14,7 +16,7 @@ public static class RemoteApi
         api.MapGet("/{provider}/authorization/challenge", Challenge);
         api.MapGet("/{provider}/authorization/callback", Callback);
         api.MapGet("/{provider}/repositories", List);
-        api.MapGet("/{provider}/repositories/{repositoryId}/enable", Enable);
+        api.MapPost("/{provider}/repositories/enable", Enable);
 
         return api;
     }
@@ -59,7 +61,7 @@ public static class RemoteApi
         return TypedResults.Redirect(redirectUri);
     }
 
-    private static async Task<Results<Ok<RepositoryList>, ProblemHttpResult>> List(
+    private static async Task<Results<Ok<RepositoryListResponse>, ProblemHttpResult>> List(
        RemoteService service,
        IdentityService identityService,
        CancellationToken cancellationToken)
@@ -78,11 +80,11 @@ public static class RemoteApi
     private static async Task<Results<Ok, ProblemHttpResult>> Enable(
      RemoteService service,
      IdentityService identityService,
-     long repositoryId,
+     EnableRepositoryRequest request,
      CancellationToken cancellationToken)
     {
         var userId = identityService.GetUserIdentity();
-        var result = await service.EnableAsync(Guid.Parse(userId), repositoryId, cancellationToken);
+        var result = await service.EnableAsync(Guid.Parse(userId), request, cancellationToken);
 
         if (result.IsError)
         {

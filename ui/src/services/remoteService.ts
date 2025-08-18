@@ -20,6 +20,7 @@ export interface RemoteRepository {
 export interface GitHubRepositoriesResponse {
   count: number;
   items: RemoteRepository[];
+  enabledItems: RemoteRepository[];
 }
 
 export interface GitHubAuthChallenge {
@@ -43,45 +44,24 @@ export class RemoteService {
 
   /**
    * Get repositories from GitHub
-   * @returns Promise with array of GitHub repositories
+   * @returns Promise with array of GitHub repositories (including enabled status)
    */
   static async getGitHubRepositories(): Promise<RemoteRepository[]> {
     try {
       const response = await apiClient.get<GitHubRepositoriesResponse>('/api/remotes/github/repositories');
-      return response.items;
+      
+      // Create a Set of enabled repository IDs for fast lookup
+      const enabledRepoIds = new Set(response.enabledItems.map(repo => repo.id));
+      
+      // Mark repositories as enabled if they exist in enabledItems
+      const allRepositories = response.items.map(repo => ({
+        ...repo,
+        enabled: enabledRepoIds.has(repo.id)
+      }));
+      
+      return allRepositories;
     } catch (error) {
       console.error('Failed to get GitHub repositories:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Enable a repository for CI/CD
-   * @param repoId Repository ID to enable
-   * @returns Promise with operation result
-   */
-  static async enableRepository(repoId: string): Promise<void> {
-    try {
-      await apiClient.post(`/api/repositories/${repoId}/enable`);
-    } catch (error) {
-      console.error('Failed to enable repository:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Enable multiple repositories for CI/CD
-   * @param repoIds Array of repository IDs to enable
-   * @returns Promise with operation results
-   */
-  static async enableMultipleRepositories(repoIds: string[]): Promise<void> {
-    try {
-      const promises = repoIds.map(repoId => 
-        apiClient.post(`/api/repositories/${repoId}/enable`)
-      );
-      await Promise.all(promises);
-    } catch (error) {
-      console.error('Failed to enable repositories:', error);
       throw error;
     }
   }
@@ -115,6 +95,32 @@ export class RemoteService {
         return { isAuthenticated: false };
       }
       console.error('Failed to check GitHub auth status:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enable GitHub repositories by IDs
+   * @param ids Array of repository IDs to enable
+   * @returns Promise<void>
+   */
+  static async enableGitHubRepositories(ids: string[]): Promise<void> {
+    try {
+      await apiClient.post<void>('/api/remotes/github/repositories/enable', { ids });
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Enable a single GitHub repository
+   * @param repoId Repository ID to enable
+   * @returns Promise<void>
+   */
+  static async enableGitHubRepository(repoId: string): Promise<void> {
+    try {
+      await this.enableGitHubRepositories([repoId]);
+    } catch (error) {
       throw error;
     }
   }

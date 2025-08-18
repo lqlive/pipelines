@@ -1,10 +1,13 @@
 using System.Security.Claims;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
+
+using Pipelines.Errors;
 using Pipelines.Extensions;
 using Pipelines.Models.Users;
-using Pipelines.Services.Users;
+using Pipelines.Services;
 
 public static class UserApi
 {
@@ -28,13 +31,9 @@ public static class UserApi
         string redirectUri,
         CancellationToken cancellationToken)
     {
-        // Check if user is authenticated
         if (!context.User.Identity?.IsAuthenticated ?? true)
         {
-            return TypedResults.Problem(
-                statusCode: 401,
-                title: "Unauthorized",
-                detail: "User is not authenticated");
+            return UserErrors.NotAuthenticated.ToProblemDetails();
         }
 
         var email = context.User.FindFirst(ClaimTypes.Email)?.Value;
@@ -47,10 +46,7 @@ public static class UserApi
 
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(name))
         {
-            return TypedResults.Problem(
-                statusCode: 400,
-                title: "Incomplete User Information",
-                detail: "Unable to obtain required user information (email and name) from external provider");
+            return UserErrors.IncompleteUserInformation.ToProblemDetails();
         }
 
         var ipAddress = context.GetClientIpAddress();
@@ -120,23 +116,15 @@ public static class UserApi
         UserService userService,
         CancellationToken cancellationToken)
     {
-        // Check if user is authenticated
         if (!context.User.Identity?.IsAuthenticated ?? true)
         {
-            return TypedResults.Problem(
-                statusCode: 401,
-                title: "Unauthorized",
-                detail: "User is not authenticated");
+            return UserErrors.NotAuthenticated.ToProblemDetails();
         }
 
-        // Get user ID from claims
         var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
         {
-            return TypedResults.Problem(
-                statusCode: 401,
-                title: "Invalid User",
-                detail: "User ID not found in claims");
+            return UserErrors.InvalidUserClaims.ToProblemDetails();
         }
 
         // Get user from database

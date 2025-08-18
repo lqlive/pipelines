@@ -1,4 +1,4 @@
-﻿namespace Pipelines.Services.Senders;
+﻿namespace Pipelines.Services;
 
 public class SenderService
 {

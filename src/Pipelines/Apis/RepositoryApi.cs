@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Http.HttpResults;
-using Pipelines.Core.Provider;
-using Pipelines.Extensions;
-using Pipelines.Services.Identity;
-using Pipelines.Services.Remotes;
+using Pipelines.Models.Repositories;
+using Pipelines.Services;
 
 public static class RepositoryApi
 {
@@ -15,19 +13,14 @@ public static class RepositoryApi
         return api;
     }
 
-    private static   async Task<Results<Ok<RepositoryList>, ProblemHttpResult>> List(
-       RemoteService service,
+    private static  async Task<Results<Ok<IEnumerable<RepositoryResponse>>, ProblemHttpResult>> List(
+       RepositoryService service,
        IdentityService identityService,
        CancellationToken cancellationToken)
     {
         var userId = identityService.GetUserIdentity();
-        var result = await service.ListAsync(Guid.Parse(userId), cancellationToken);
+        var result = await service.ListAsync(cancellationToken);
 
-        if (result.IsError)
-        {
-            return result.Errors.HandleErrors();
-        }
-
-        return TypedResults.Ok(result.Value);
+        return TypedResults.Ok(result);
     }
 }
