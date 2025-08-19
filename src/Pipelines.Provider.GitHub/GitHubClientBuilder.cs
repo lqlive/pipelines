@@ -5,7 +5,6 @@ namespace Pipelines.Provider.GitHub;
 public class GitHubClientBuilder
 {
     private readonly IUserStore _userStore;
-
     public GitHubClientBuilder(IUserStore userStore)
     {
         _userStore = userStore;

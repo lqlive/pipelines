@@ -68,6 +68,7 @@ public sealed class GitHubProvider : OAuthProvider, IRemoteProvider
         var repositories = await client.Repository.GetAllForCurrent();
 
         var items = repositories.Select(MapResponse);
+
         return new RepositoryList
         {
             Count = items.Count(),

@@ -20,6 +20,7 @@ public class RepositoryService(IRepositoryStore repositoryStore)
         {
             Id = repository.Id,
             Name = repository.Name,
+            Description = repository.Description,
             CreatedAt = repository.CreatedAt,
             UpdatedAt = repository.UpdatedAt
         };

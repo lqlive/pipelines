@@ -42,5 +42,4 @@ public static class ErrorOrExtensions
             detail: error.Description,
             type: error.Code);
     }
-
 }

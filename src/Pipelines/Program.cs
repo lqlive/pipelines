@@ -49,7 +49,23 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.Cookie.Name = "Pipelines.Session";
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnSigningIn = async context =>
+            {
+                await Task.CompletedTask;
+            },
 
+            OnValidatePrincipal = async context =>
+            {
+                await Task.CompletedTask;
+            },
+
+            OnSigningOut = async context =>
+            {
+                await Task.CompletedTask;
+            },
+        };
     })
     .AddMicrosoftAccount(options =>
     {

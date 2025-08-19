@@ -1,7 +1,5 @@
 namespace Pipelines.Core.Entities.Builds;
 
-
-
 public class Step
 {
     public Guid Id { get; set; }

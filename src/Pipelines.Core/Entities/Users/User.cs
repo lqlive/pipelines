@@ -24,4 +24,5 @@ public class User
     public UserSetting? Setting { get; set; }
     public List<UserProvider>? Providers { get; set; }
     public List<UserLoginMethod>? LoginMethods { get; set; }
+    public List<UserSession>? UserSessions { get; set; }
 }

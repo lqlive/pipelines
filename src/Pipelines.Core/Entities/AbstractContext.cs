@@ -8,7 +8,6 @@ public abstract class AbstractContext<TContext> : DbContext, IContext where TCon
     public DbSet<User> Users { get; set; }
     public DbSet<Repository> Repositories { get; set; }
     public bool SupportsLimitInSubqueries => true;
-
     public abstract bool IsUniqueConstraintViolationException(DbUpdateException exception);
     public virtual Task RunMigrationsAsync(CancellationToken cancellationToken)
         => Database.MigrateAsync(cancellationToken);
