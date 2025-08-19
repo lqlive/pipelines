@@ -7,6 +7,7 @@ using Pipelines.Session;
 using Pipelines.Storage.PostgreSQL.Management;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Pipelines.Services;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,32 +42,14 @@ builder.Services.AddScoped<RemoteService>();
 builder.Services.AddScoped<IdentityService>();
 builder.Services.AddScoped<RepositoryService>();
 builder.Services.AddScoped<BuildService>();
+builder.Services.AddSingleton<ITicketStore, DistributedTicketStore>();
+builder.Services.AddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, PostConfigureCookieTicketStore>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();
+ 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie((options) =>
-    {
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
-        options.Cookie.Name = "Pipelines.Session";
-        options.Events = new CookieAuthenticationEvents
-        {
-            OnSigningIn = async context =>
-            {
-                await Task.CompletedTask;
-            },
-
-            OnValidatePrincipal = async context =>
-            {
-                await Task.CompletedTask;
-            },
-
-            OnSigningOut = async context =>
-            {
-                await Task.CompletedTask;
-            },
-        };
-    })
+    .AddCookie()
     .AddMicrosoftAccount(options =>
     {
         options.ClientId = builder.Configuration["Authentication:Microsoft:ClientId"]!;
