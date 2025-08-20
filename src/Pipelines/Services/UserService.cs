@@ -1,5 +1,7 @@
 using ErrorOr;
+
 using Microsoft.AspNetCore.Identity;
+
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Stores;
 using Pipelines.Errors;
@@ -9,6 +11,23 @@ namespace Pipelines.Services;
 
 public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHasher,ILogger<UserService> logger)
 {
+
+    public async Task<ErrorOr<Success>> PatchAsync(Guid id, Patch<UserRequest> patch, CancellationToken cancellationToken)
+    {
+        var user = await userStore.GetByIdAsync(id, cancellationToken);
+
+        if (user is null)
+        {
+            return UserErrors.UserNotFound;
+        }
+
+        patch.ApplyTo(user);
+        user.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await userStore.UpdateAsync(user, cancellationToken);
+
+        return Result.Success;
+    }
     public async Task<ErrorOr<UserResponse>> LoginWithAsync(LoginWithRequest request, string? ipAddress, CancellationToken cancellationToken)
     {
         var existingUser = await userStore.GetByEmailAsync(request.Email, cancellationToken);

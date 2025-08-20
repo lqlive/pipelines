@@ -1,5 +1,7 @@
 using System.Security.Claims;
 
+using ErrorOr;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -8,6 +10,7 @@ using Pipelines.Errors;
 using Pipelines.Extensions;
 using Pipelines.Models.Users;
 using Pipelines.Services;
+
 
 public static class UserApi
 {
@@ -21,8 +24,25 @@ public static class UserApi
         api.MapPost("/login", Login);
         api.MapPost("/logout", Logout);
         api.MapPost("/register", Register);
+        api.MapPatch("/", Patch);
 
         return api;
+    }
+
+    private static async Task<Results<Ok, ProblemHttpResult>> Patch(Patch<UserRequest> patch,
+        UserService userService,
+        IdentityService identityService,
+        CancellationToken cancellationToken)
+    {
+        var userId = identityService.GetUserIdentity();
+        var result = await userService.PatchAsync(Guid.Parse(userId), patch, cancellationToken);
+
+        if (result.IsError)
+        {
+            return result.Errors.HandleErrors();
+        }
+
+        return TypedResults.Ok();
     }
 
     private static async Task<IResult> LoginWith(
