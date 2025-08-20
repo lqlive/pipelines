@@ -66,7 +66,7 @@ public class RemoteService(GitHubProvider remoteProvider,
                 {
                     Id = long.Parse(x.RawId),
                     Name = x.Name,
-                    CloneUrl = x.Url,
+                    CloneUrl = x.CloneUrl,
                     Description = x.Description,
                 }).ToList(),
                 Count = items.Count
@@ -98,7 +98,7 @@ public class RemoteService(GitHubProvider remoteProvider,
                 {
                     RawId = repository.Id.ToString(),
                     Name = repository.Name,
-                    Url = repository.CloneUrl,
+                    CloneUrl = repository.CloneUrl,
                     Description = repository.Description,
                     Provider = GitProvider.GitHub
                 };

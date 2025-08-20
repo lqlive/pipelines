@@ -8,6 +8,7 @@ using Pipelines.Storage.PostgreSQL.Management;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Pipelines.Services;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,15 +36,24 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
+// Redis 配置
 builder.Services.AddStackExchangeRedisCache(options => { options.Configuration = "localhost:6379"; });
-builder.Services.AddScoped<DistributedTicketStore>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
+{
+    return ConnectionMultiplexer.Connect("localhost:6379");
+});
+
+// 会话管理服务
+builder.Services.AddScoped<ISessionManager<Pipelines.Session.ISession>, SessionManager>();
+builder.Services.AddSingleton<ITicketStore, DistributedTicketStore>();
+builder.Services.AddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, PostConfigureCookieTicketStore>();
+
+// 其他服务
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RemoteService>();
 builder.Services.AddScoped<IdentityService>();
 builder.Services.AddScoped<RepositoryService>();
 builder.Services.AddScoped<BuildService>();
-builder.Services.AddSingleton<ITicketStore, DistributedTicketStore>();
-builder.Services.AddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, PostConfigureCookieTicketStore>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();
