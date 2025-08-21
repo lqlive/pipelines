@@ -16,6 +16,16 @@ export interface LoginResponse {
   // No accessToken needed when using cookies
 }
 
+// User update request interface (partial update like Microsoft Graph REST API)
+export interface UserUpdateRequest {
+  name?: string;
+  email?: string;
+  avatar?: string;
+  firstName?: string;
+  lastName?: string;
+  bio?: string;
+}
+
 // User service class
 export class UserService {
   /**
@@ -73,6 +83,20 @@ export class UserService {
     } catch (error) {
       // Don't prevent local logout if API call fails
       console.warn('Logout API call failed:', error);
+    }
+  }
+
+  /**
+   * Update user information (partial update)
+   * @param updateData User data to update (only provide fields to be updated)
+   * @returns Updated user information
+   */
+  static async updateUser(updateData: UserUpdateRequest): Promise<LoginResponse> {
+    try {
+      const response = await apiClient.patch<LoginResponse>('/api/users', updateData);
+      return response;
+    } catch (error) {
+      throw error;
     }
   }
 

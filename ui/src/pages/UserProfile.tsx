@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   UserIcon,
   CameraIcon,
@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
+import { UserService } from '../services/userService';
 
 type TabId = 'profile' | 'account' | 'security' | 'notifications';
 
@@ -34,7 +35,10 @@ const UserProfile: React.FC = () => {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
+  const [avatarUploadSuccess, setAvatarUploadSuccess] = useState(false);
+  const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null);
   const [profileForm, setProfileForm] = useState<ProfileForm>({
     username: 'John Developer',
     email: 'john@example.com',
@@ -60,11 +64,66 @@ const UserProfile: React.FC = () => {
     }));
   };
 
-  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        resolve(base64String);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      // TODO: Implement avatar upload logic
-      console.log('Uploading avatar:', file);
+    if (!file) return;
+
+    // Clear previous messages
+    setAvatarUploadSuccess(false);
+    setAvatarUploadError(null);
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setAvatarUploadError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarUploadError('File size must be less than 2MB');
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+      
+      // Convert file to base64
+      const base64Avatar = await convertFileToBase64(file);
+      
+      // Update user avatar via API
+      const updatedUser = await UserService.updateUser({ avatar: base64Avatar });
+      
+      // Update local state
+      setCurrentAvatar(updatedUser.avatar || base64Avatar);
+      setAvatarUploadSuccess(true);
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setAvatarUploadSuccess(false);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      setAvatarUploadError('Failed to upload avatar. Please try again.');
+      
+      // Hide error message after 5 seconds
+      setTimeout(() => {
+        setAvatarUploadError(null);
+      }, 5000);
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -142,31 +201,53 @@ const UserProfile: React.FC = () => {
               <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
                 <div className="relative">
                   <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                    <UserIcon className="w-12 h-12 text-gray-400" />
+                    {currentAvatar ? (
+                      <img
+                        src={currentAvatar}
+                        alt="User avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <UserIcon className="w-12 h-12 text-gray-400" />
+                    )}
+                    {isUploadingAvatar && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-full">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                      </div>
+                    )}
                   </div>
-                  <label className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
+                  <label className={`absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg ${isUploadingAvatar ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     <CameraIcon className="w-4 h-4 text-white" />
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleAvatarUpload}
+                      disabled={isUploadingAvatar}
                       className="hidden"
                     />
                   </label>
                 </div>
                 <div className="text-center sm:text-left">
-                  <input
-                    ref={avatarInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                  />
                   <p className="text-xs text-gray-500 mt-6">
                     Click the camera icon to change your profile picture<br/>
                     Recommended: Square image, at least 200×200px<br/>
                     JPG, GIF or PNG. Max size 2MB.
                   </p>
+                  {isUploadingAvatar && (
+                    <p className="text-xs text-blue-600 mt-2 font-medium">
+                      Uploading avatar...
+                    </p>
+                  )}
+                  {avatarUploadSuccess && (
+                    <p className="text-xs text-green-600 mt-2 font-medium">
+                      ✓ Avatar updated successfully!
+                    </p>
+                  )}
+                  {avatarUploadError && (
+                    <p className="text-xs text-red-600 mt-2 font-medium">
+                      ⚠ {avatarUploadError}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,7 +1,5 @@
 using ErrorOr;
-
 using Microsoft.AspNetCore.Identity;
-
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Stores;
 using Pipelines.Errors;
