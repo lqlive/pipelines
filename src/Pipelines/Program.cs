@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Pipelines.Services;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,17 +44,15 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
     return ConnectionMultiplexer.Connect("localhost:6379");
 });
 
-// 会话管理服务
-builder.Services.AddScoped<ISessionManager<Pipelines.Session.ISession>, SessionManager>();
+builder.Services.TryAddTransient<ISessionManager, SessionManager>();
 builder.Services.AddSingleton<ITicketStore, DistributedTicketStore>();
 builder.Services.AddSingleton<IPostConfigureOptions<CookieAuthenticationOptions>, PostConfigureCookieTicketStore>();
 
-// 其他服务
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<RemoteService>();
-builder.Services.AddScoped<IdentityService>();
-builder.Services.AddScoped<RepositoryService>();
-builder.Services.AddScoped<BuildService>();
+builder.Services.TryAddTransient<UserService>();
+builder.Services.TryAddTransient<RemoteService>();
+builder.Services.TryAddTransient<IdentityService>();
+builder.Services.TryAddTransient<RepositoryService>();
+builder.Services.TryAddTransient<BuildService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();

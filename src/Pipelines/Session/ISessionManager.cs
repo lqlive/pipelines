@@ -1,8 +1,8 @@
 ﻿namespace Pipelines.Session;
 
-public interface ISessionManager<ISession>
+public interface ISessionManager
 {
-   Task<bool> AddSessionAsync(ISession session);
-   Task<IEnumerable<ISession>> ListSessionsAsync(Guid userId);
+   Task<bool> AddSessionAsync(UserSession session);
+   Task<IEnumerable<UserSession>> ListSessionsAsync(Guid userId);
    Task<bool> RemoveSessionAsync(Guid userId, string sessionToken);
 }

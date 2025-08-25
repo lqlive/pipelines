@@ -2,8 +2,7 @@
 using System.Text.Json;
 
 namespace Pipelines.Session;
-
-public class SessionManager : ISessionManager<ISession>
+public class SessionManager : ISessionManager
 {
     private const string UserSessionsKeyPrefix = "user_sessions:";
     private readonly IDatabase _database;
@@ -15,7 +14,7 @@ public class SessionManager : ISessionManager<ISession>
         _logger = logger;
     }
 
-    public async Task<bool> AddSessionAsync(ISession session)
+    public async Task<bool> AddSessionAsync(UserSession session)
     {
         try
         {
@@ -62,7 +61,7 @@ public class SessionManager : ISessionManager<ISession>
         }
     }
 
-    public async Task<IEnumerable<ISession>> ListSessionsAsync(Guid userId)
+    public async Task<IEnumerable<UserSession>> ListSessionsAsync(Guid userId)
     {
         try
         {
@@ -74,10 +73,10 @@ public class SessionManager : ISessionManager<ISession>
             if (!sessionEntries.Any())
             {
                 _logger.LogDebug("No sessions found for user {UserId}", userId);
-                return Enumerable.Empty<ISession>();
+                return Enumerable.Empty<UserSession>();
             }
 
-            var sessions = new List<ISession>();
+            var sessions = new List<UserSession>();
             var expiredSessions = new List<RedisValue>();
 
             foreach (var entry in sessionEntries)
@@ -124,7 +123,7 @@ public class SessionManager : ISessionManager<ISession>
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to list sessions for user {UserId}", userId);
-            return Enumerable.Empty<ISession>();
+            return Enumerable.Empty<UserSession>();
         }
     }
     public async Task<bool> RemoveSessionAsync(Guid userId, string sessionToken)

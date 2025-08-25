@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -8,15 +9,20 @@ public class DistributedTicketStore : ITicketStore
 {
     private const string KeyPrefix = "Pipelines.Session-";
     private readonly IDistributedCache _cache;
+    private readonly ISessionManager _sessionManager;
     private readonly ILogger<DistributedTicketStore> _logger;
     private readonly TicketSerializer _ticketSerializer;
 
-    public DistributedTicketStore(IDistributedCache cache, ILogger<DistributedTicketStore> logger)
+    public DistributedTicketStore(IDistributedCache cache,
+        ISessionManager sessionManager,
+        ILogger<DistributedTicketStore> logger)
     {
         ArgumentNullException.ThrowIfNull(cache);
+        ArgumentNullException.ThrowIfNull(sessionManager);
         ArgumentNullException.ThrowIfNull(logger);
 
         _cache = cache;
+        _sessionManager = sessionManager;
         _logger = logger;
         _ticketSerializer = TicketSerializer.Default;
     }
@@ -28,7 +34,6 @@ public class DistributedTicketStore : ITicketStore
         await RenewAsync(key, ticket);
         return key;
     }
-
     public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
         var ticketBytes = _ticketSerializer.Serialize(ticket);
@@ -41,9 +46,18 @@ public class DistributedTicketStore : ITicketStore
             options.SetAbsoluteExpiration(expiresUtc.Value);
         }
 
-        options.SetSlidingExpiration(TimeSpan.FromHours(1)); 
+        options.SetSlidingExpiration(TimeSpan.FromHours(1));
+
+        var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value
+                       ?? ticket.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         await _cache.SetAsync(key, ticketBytes, options);
+
+        await _sessionManager.AddSessionAsync(new UserSession
+        {
+            SessionToken = key,
+            UserId = Guid.Parse(userIdClaim ?? string.Empty)
+        });
 
         _logger.LogDebug("Ticket stored/renewed: {Key}", key);
     }
@@ -59,9 +73,14 @@ public class DistributedTicketStore : ITicketStore
         return _ticketSerializer.Deserialize(ticketBytes);
     }
 
-    public async Task RemoveAsync(string key)
+    public async Task RemoveAsync(string key, HttpContext httpContext, CancellationToken cancellationToken)
     {
         await _cache.RemoveAsync(key);
         _logger.LogDebug("Ticket removed: {Key}", key);
+    }
+
+    public Task RemoveAsync(string key)
+    {
+        throw new NotImplementedException();
     }
 }

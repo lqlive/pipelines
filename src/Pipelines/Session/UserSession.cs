@@ -1,22 +1,10 @@
 ﻿namespace Pipelines.Session;
 
-public interface ISession
-{
-    Guid Id { get; set; }
-    Guid UserId { get; set; }
-    string SessionToken { get; set; }
-    SessionStatus Status { get; set; }
-    DateTimeOffset CreatedAt { get; set; }
-    DateTimeOffset ExpiresAt { get; set; }
-    DateTimeOffset LastActiveAt { get; set; }
-}
-
-public class UserSession : ISession
+public class UserSession 
 {
     public Guid Id { get; set; }
     public Guid UserId { get; set; }
     public required string SessionToken { get; set; }
-
     public SessionStatus Status { get; set; } = SessionStatus.Active;
 
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
@@ -38,5 +26,4 @@ public class UserSession : ISession
     public DateTimeOffset? TerminatedAt { get; set; }
 
     public string? TerminationReason { get; set; }
-
 }
