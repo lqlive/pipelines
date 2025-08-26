@@ -17,5 +17,4 @@ public class Build
     public bool CancelInProgress { get; set; } = false;
     public bool CancellationRequested { get; set; } = false;
     public List<Step> Steps { get; set; } = new();
-    public List<Log> Logs { get; set; } = new();
 }

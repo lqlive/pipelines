@@ -31,7 +31,6 @@ public static class SessionApi
       CancellationToken cancellationToken)
     {
         var userId = identityService.GetUserIdentity();
-
         var result = await sessionManager.RemoveSessionAsync(Guid.Parse(userId), id);
         return TypedResults.Ok();
     }
