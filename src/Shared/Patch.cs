@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Text.Json;
 
 namespace Microsoft.AspNetCore.Http;
-
 public sealed class Patch<TModel> where TModel : class
 {
     private readonly IDictionary<PropertyInfo, object> _changedProperties = new Dictionary<PropertyInfo, object>();

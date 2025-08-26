@@ -10,6 +10,7 @@ using Pipelines.Services;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Pipelines.Apis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +38,6 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
-// Redis 配置
 builder.Services.AddStackExchangeRedisCache(options => { options.Configuration = "localhost:6379"; });
 builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
 {
@@ -96,5 +96,6 @@ app.MapUserApiV1();
 app.MapRemoteApiV1();
 app.MapBuildApi();
 app.MapRepositoryApiV1();
+app.MapSessionApiV1();
 
 app.Run();

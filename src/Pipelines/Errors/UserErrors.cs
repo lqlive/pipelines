@@ -1,7 +1,6 @@
 ﻿using ErrorOr;
 
 namespace Pipelines.Errors;
-
 public static class UserErrors
 {
     public static Error InvalidCredentials => Error.Validation(

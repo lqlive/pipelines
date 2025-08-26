@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   UserIcon,
   CameraIcon,
@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import { UserService } from '../services/userService';
+import { SessionService, Session } from '../services/sessionService';
 
 type TabId = 'profile' | 'account' | 'security' | 'notifications';
 
@@ -39,6 +40,8 @@ const UserProfile: React.FC = () => {
   const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const [avatarUploadSuccess, setAvatarUploadSuccess] = useState(false);
   const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
   const [profileForm, setProfileForm] = useState<ProfileForm>({
     username: 'John Developer',
     email: 'john@example.com',
@@ -150,6 +153,25 @@ const UserProfile: React.FC = () => {
       confirmPassword: '',
     }));
   };
+
+  const loadSessions = async () => {
+    try {
+      setLoadingSessions(true);
+      const sessionData = await SessionService.getSessions();
+      setSessions(sessionData);
+    } catch (error) {
+      console.error('Failed to load sessions:', error);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  // Load sessions when security tab is active
+  useEffect(() => {
+    if (activeTab === 'security') {
+      loadSessions();
+    }
+  }, [activeTab]);
 
   return (
     <div className="fade-in">
@@ -539,18 +561,56 @@ const UserProfile: React.FC = () => {
                 {/* Active Sessions */}
                 <div className="pt-6 border-t border-gray-200">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">Active Sessions</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">Current Session</div>
-                        <div className="text-sm text-gray-500">Chrome on Windows • Active now</div>
-                      </div>
-                      <span className="text-xs text-green-600 font-medium">Current</span>
+                  
+                  {loadingSessions ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                      <span className="ml-2 text-sm text-gray-500">Loading sessions...</span>
                     </div>
-                    <button className="btn-danger text-sm">
-                      Sign out all other sessions
-                    </button>
-                  </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {sessions.length === 0 ? (
+                        <div className="text-sm text-gray-500 py-4">No active sessions found.</div>
+                      ) : (
+                        sessions.map((session) => {
+                          const isCurrentDevice = SessionService.isCurrentSession(session);
+                          const deviceType = SessionService.getDeviceTypeDisplay(session.deviceType);
+                          const browserName = SessionService.getBrowserName(session.userAgent);
+                          const lastActive = SessionService.formatLastActive(session.lastActiveAt);
+                          
+                          return (
+                            <div key={session.sessionToken} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {browserName} on {deviceType}
+                                  </div>
+                                  {isCurrentDevice && (
+                                    <span className="text-xs text-green-600 font-medium bg-green-100 px-2 py-1 rounded">
+                                      Current
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-500 mt-1">
+                                  {session.ipAddress && (
+                                    <span>IP: {session.ipAddress} • </span>
+                                  )}
+                                  {lastActive}
+                                  {session.location && (
+                                    <span> • {session.location}</span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-400 mt-1">
+                                  Created: {new Date(session.createdAt).toLocaleDateString()} • 
+                                  Expires: {new Date(session.expiresAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Danger Zone */}

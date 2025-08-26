@@ -1,17 +1,11 @@
 using System.Security.Claims;
-
-using ErrorOr;
-
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.HttpResults;
-
 using Pipelines.Errors;
 using Pipelines.Extensions;
 using Pipelines.Models.Users;
 using Pipelines.Services;
-
-
 public static class UserApi
 {
     public static RouteGroupBuilder MapUserApiV1(this IEndpointRouteBuilder app)
@@ -96,7 +90,6 @@ public static class UserApi
             [provider]
          );
     }
-
     private static async Task<Results<Ok, ProblemHttpResult>> Register(
         RegisterRequest request,
         UserService userService,

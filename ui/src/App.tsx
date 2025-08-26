@@ -38,14 +38,42 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+// Component to prevent authenticated users from accessing auth pages
+const RequireNoAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    // Redirect authenticated users to dashboard
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const AppContent: React.FC = () => {
 
   return (
     <Router>
       <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Auth routes - redirect if already authenticated */}
+        <Route path="/login" element={
+          <RequireNoAuth>
+            <Login />
+          </RequireNoAuth>
+        } />
+        <Route path="/register" element={
+          <RequireNoAuth>
+            <Register />
+          </RequireNoAuth>
+        } />
         
         {/* Protected routes */}
         <Route path="/*" element={

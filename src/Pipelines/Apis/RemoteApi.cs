@@ -78,10 +78,10 @@ public static class RemoteApi
     }
 
     private static async Task<Results<Ok, ProblemHttpResult>> Enable(
-     RemoteService service,
-     IdentityService identityService,
-     EnableRepositoryRequest request,
-     CancellationToken cancellationToken)
+       RemoteService service,
+       IdentityService identityService,
+       EnableRepositoryRequest request,
+       CancellationToken cancellationToken)
     {
         var userId = identityService.GetUserIdentity();
         var result = await service.EnableAsync(Guid.Parse(userId), request, cancellationToken);

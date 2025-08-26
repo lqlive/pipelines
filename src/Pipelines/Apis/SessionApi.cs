@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Pipelines.Services;
+using Pipelines.Session;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Pipelines.Apis;
 
@@ -11,10 +13,13 @@ public static class SessionApi
         api.MapGet("/", List);
         return api;
     }
-    private static async Task<Results<Ok, ProblemHttpResult>> List(
+    private static async Task<Results<Ok<IEnumerable<UserSession>>, ProblemHttpResult>> List(
+       ISessionManager sessionManager,
+       IdentityService identityService,
        CancellationToken cancellationToken)
     {
-        await Task.CompletedTask;
-        return TypedResults.Ok();
+        var userId = identityService.GetUserIdentity();
+        var result = await sessionManager.ListSessionsAsync(Guid.Parse(userId));
+        return TypedResults.Ok(result);
     }
 }

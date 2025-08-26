@@ -62,6 +62,12 @@ public class DistributedTicketStore : ITicketStore
         _logger.LogDebug("Ticket stored/renewed: {Key}", key);
     }
 
+    public async Task RemoveAsync(string key)
+    {
+        await _cache.RemoveAsync(key);
+        _logger.LogDebug("Ticket removed: {Key}", key);
+    }
+
     public async Task<AuthenticationTicket?> RetrieveAsync(string key)
     {
         var ticketBytes = await _cache.GetAsync(key);
@@ -71,16 +77,5 @@ public class DistributedTicketStore : ITicketStore
         }
 
         return _ticketSerializer.Deserialize(ticketBytes);
-    }
-
-    public async Task RemoveAsync(string key, HttpContext httpContext, CancellationToken cancellationToken)
-    {
-        await _cache.RemoveAsync(key);
-        _logger.LogDebug("Ticket removed: {Key}", key);
-    }
-
-    public Task RemoveAsync(string key)
-    {
-        throw new NotImplementedException();
     }
 }

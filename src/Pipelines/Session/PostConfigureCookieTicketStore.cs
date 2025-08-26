@@ -9,8 +9,8 @@ public class PostConfigureCookieTicketStore(ITicketStore ticketStore) :
 {
     public void PostConfigure(string? name, CookieAuthenticationOptions options)
     {
-        options.ExpireTimeSpan = TimeSpan.FromDays(7);
         options.Cookie.Name = "Pipelines.Session";
         options.SessionStore = ticketStore;
+        options.SlidingExpiration = true;
     }
 }
