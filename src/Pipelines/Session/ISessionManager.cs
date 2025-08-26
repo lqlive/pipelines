@@ -2,7 +2,8 @@
 
 public interface ISessionManager
 {
-   Task<bool> AddSessionAsync(UserSession session);
-   Task<IEnumerable<UserSession>> ListSessionsAsync(Guid userId);
-   Task<bool> RemoveSessionAsync(Guid userId, string sessionToken);
+    Task<bool> AddSessionAsync(UserSession session);
+    Task<IEnumerable<UserSession>> ListSessionsAsync(Guid userId);
+    Task<bool> RemoveSessionAsync(Guid userId, Guid sessionId);
+    Task<bool> RemoveSessionAsync(Guid userId, string sessionToken);
 }

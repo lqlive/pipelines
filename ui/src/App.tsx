@@ -88,6 +88,7 @@ const AppContent: React.FC = () => {
                 <Route path="/repositories/:owner/:name/builds/:buildNumber" element={<Build />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/profile" element={<UserProfile />} />
+                <Route path="/profile/:tab" element={<UserProfile />} />
               </Routes>
             </Layout>
           </RequireAuth>

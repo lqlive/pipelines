@@ -131,7 +131,6 @@ public class SessionManager : ISessionManager
         try
         {
             var userSessionsKey = GetUserSessionsKey(userId);
-
             var sessionEntries = await _database.SortedSetRangeByScoreWithScoresAsync(userSessionsKey);
 
             foreach (var entry in sessionEntries)
@@ -141,7 +140,12 @@ public class SessionManager : ISessionManager
                     var session = JsonSerializer.Deserialize<UserSession>(entry.Element.ToString());
                     if (session?.SessionToken == sessionToken)
                     {
+                        // Remove from sorted set (user sessions list)
                         var removed = await _database.SortedSetRemoveAsync(userSessionsKey, entry.Element);
+                        
+                        // Remove session token from Redis cache
+                        await _database.KeyDeleteAsync(sessionToken);
+                        _logger.LogDebug("Session token {SessionToken} deleted from Redis cache", sessionToken);
 
                         if (removed)
                         {
@@ -162,6 +166,45 @@ public class SessionManager : ISessionManager
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to remove session {SessionToken} for user {UserId}", sessionToken, userId);
+            return false;
+        }
+    }
+
+    public async Task<bool> RemoveSessionAsync(Guid userId, Guid sessionId)
+    {
+        try
+        {
+            var userSessionsKey = GetUserSessionsKey(userId);
+            var sessionEntries = await _database.SortedSetRangeByScoreWithScoresAsync(userSessionsKey);
+
+            foreach (var entry in sessionEntries)
+            {
+                try
+                {
+                    var session = JsonSerializer.Deserialize<UserSession>(entry.Element.ToString());
+                    if (session?.Id == sessionId)
+                    {
+                        _ = await _database.KeyDeleteAsync(session.SessionToken);
+                        var removed = await _database.SortedSetRemoveAsync(userSessionsKey, entry.Element);
+                        if (removed)
+                        {
+                            _logger.LogInformation("Session {SessionId} removed successfully for user {UserId}",
+                                sessionId, userId);
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to process session during removal for user {UserId}", userId);
+                }
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to remove session {SessionId} for user {UserId}", sessionId, userId);
             return false;
         }
     }

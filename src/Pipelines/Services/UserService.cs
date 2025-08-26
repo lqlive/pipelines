@@ -9,7 +9,6 @@ namespace Pipelines.Services;
 
 public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHasher,ILogger<UserService> logger)
 {
-
     public async Task<ErrorOr<Success>> PatchAsync(
         Guid id,
         Patch<UserRequest> patch,

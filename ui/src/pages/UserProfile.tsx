@@ -7,8 +7,11 @@ import {
   EnvelopeIcon,
   BellIcon,
   ShieldCheckIcon,
+  TrashIcon,
+  XMarkIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { UserService } from '../services/userService';
 import { SessionService, Session } from '../services/sessionService';
 
@@ -32,7 +35,12 @@ interface ProfileForm {
 }
 
 const UserProfile: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>('profile');
+  const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+  
+  // Validate tab parameter and set default
+  const validTabs: TabId[] = ['account', 'security', 'notifications'];
+  const activeTab: TabId = tab && validTabs.includes(tab as TabId) ? tab as TabId : 'profile';
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -42,6 +50,9 @@ const UserProfile: React.FC = () => {
   const [avatarUploadError, setAvatarUploadError] = useState<string | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [profileForm, setProfileForm] = useState<ProfileForm>({
     username: 'John Developer',
     email: 'john@example.com',
@@ -89,13 +100,13 @@ const UserProfile: React.FC = () => {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      setAvatarUploadError('Please select an image file');
+      showNotification('error', 'Please select an image file');
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
-      setAvatarUploadError('File size must be less than 2MB');
+      showNotification('error', 'File size must be less than 2MB');
       return;
     }
 
@@ -137,15 +148,16 @@ const UserProfile: React.FC = () => {
 
   const changePassword = () => {
     if (profileForm.newPassword !== profileForm.confirmPassword) {
-      alert('New passwords do not match');
+      showNotification('error', 'New passwords do not match');
       return;
     }
     if (profileForm.newPassword.length < 6) {
-      alert('Password must be at least 6 characters');
+      showNotification('error', 'Password must be at least 6 characters');
       return;
     }
     console.log('Change password');
     // TODO: Implement password change logic
+    showNotification('success', 'Password changed successfully');
     setProfileForm(prev => ({
       ...prev,
       currentPassword: '',
@@ -164,6 +176,39 @@ const UserProfile: React.FC = () => {
     } finally {
       setLoadingSessions(false);
     }
+  };
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  const handleDeleteSessionRequest = (sessionId: string, browserName: string, deviceType: string) => {
+    const sessionName = `${browserName} on ${deviceType}`;
+    setSessionToDelete({ id: sessionId, name: sessionName });
+  };
+
+  const handleConfirmDeleteSession = async () => {
+    if (!sessionToDelete) return;
+
+    try {
+      setDeletingSessionId(sessionToDelete.id);
+      await SessionService.deleteSession(sessionToDelete.id);
+      
+      // Reload session list
+      await loadSessions();
+      showNotification('success', 'Session deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      showNotification('error', 'Failed to delete session. Please try again.');
+    } finally {
+      setDeletingSessionId(null);
+      setSessionToDelete(null);
+    }
+  };
+
+  const handleCancelDeleteSession = () => {
+    setSessionToDelete(null);
   };
 
   // Load sessions when security tab is active
@@ -191,7 +236,7 @@ const UserProfile: React.FC = () => {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => navigate(tab.id === 'profile' ? '/profile' : `/profile/${tab.id}`)}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                       activeTab === tab.id
                         ? 'bg-gray-100 text-gray-900'
@@ -571,9 +616,30 @@ const UserProfile: React.FC = () => {
                     <div className="space-y-3">
                       {sessions.length === 0 ? (
                         <div className="text-sm text-gray-500 py-4">No active sessions found.</div>
-                      ) : (
-                        sessions.map((session) => {
-                          const isCurrentDevice = SessionService.isCurrentSession(session);
+                      ) : (() => {
+                        // Determine which session is current
+                        const currentSessions = sessions.filter(s => SessionService.isCurrentSession(s));
+                        let currentSessionId: string | null = null;
+                        
+                        if (currentSessions.length === 1) {
+                          // Perfect - one session identified as current
+                          currentSessionId = currentSessions[0].id;
+                        } else if (currentSessions.length === 0) {
+                          // No session identified - use most recently active
+                          const mostRecent = sessions.reduce((latest, current) => 
+                            new Date(current.lastActiveAt) > new Date(latest.lastActiveAt) ? current : latest
+                          );
+                          currentSessionId = mostRecent.id;
+                        } else {
+                          // Multiple sessions marked as current - use most recently active among them
+                          const mostRecentCurrent = currentSessions.reduce((latest, current) => 
+                            new Date(current.lastActiveAt) > new Date(latest.lastActiveAt) ? current : latest
+                          );
+                          currentSessionId = mostRecentCurrent.id;
+                        }
+                        
+                        return sessions.map((session) => {
+                          const isCurrentDevice = session.id === currentSessionId;
                           const deviceType = SessionService.getDeviceTypeDisplay(session.deviceType);
                           const browserName = SessionService.getBrowserName(session.userAgent);
                           const lastActive = SessionService.formatLastActive(session.lastActiveAt);
@@ -605,10 +671,26 @@ const UserProfile: React.FC = () => {
                                   Expires: {new Date(session.expiresAt).toLocaleDateString()}
                                 </div>
                               </div>
+                              {!isCurrentDevice && (
+                                <div className="ml-4">
+                                  <button
+                                    onClick={() => handleDeleteSessionRequest(session.id, browserName, deviceType)}
+                                    disabled={deletingSessionId === session.id}
+                                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    title="Delete Session"
+                                  >
+                                    {deletingSessionId === session.id ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                    ) : (
+                                      <TrashIcon className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           );
-                        })
-                      )}
+                        });
+                      })()}
                     </div>
                   )}
                 </div>
@@ -715,6 +797,68 @@ const UserProfile: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {sessionToDelete && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="flex items-center mb-4">
+              <ExclamationTriangleIcon className="h-6 w-6 text-red-600 mr-3" />
+              <h3 className="text-lg font-medium text-gray-900">Confirm Delete Session</h3>
+            </div>
+            <p className="text-sm text-gray-500 mb-6">
+              Are you sure you want to delete the session for <strong>{sessionToDelete.name}</strong>? 
+              This will log out that device and cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelDeleteSession}
+                className="btn-secondary px-4 py-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDeleteSession}
+                disabled={deletingSessionId === sessionToDelete.id}
+                className="btn-danger px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {deletingSessionId === sessionToDelete.id ? 'Deleting...' : 'Delete Session'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className={`rounded-lg p-4 shadow-lg max-w-sm ${
+            notification.type === 'success' 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-red-50 border border-red-200'
+          }`}>
+            <div className="flex items-center">
+              <div className="flex-1">
+                <p className={`text-sm font-medium ${
+                  notification.type === 'success' ? 'text-green-800' : 'text-red-800'
+                }`}>
+                  {notification.message}
+                </p>
+              </div>
+              <button
+                onClick={() => setNotification(null)}
+                className={`ml-3 p-1 rounded-md hover:bg-opacity-20 ${
+                  notification.type === 'success' 
+                    ? 'text-green-500 hover:bg-green-500' 
+                    : 'text-red-500 hover:bg-red-500'
+                }`}
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

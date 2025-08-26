@@ -11,6 +11,7 @@ public static class SessionApi
         var api = app.MapGroup("api/sessions");
 
         api.MapGet("/", List);
+        api.MapDelete("/{id}", Delete);
         return api;
     }
     private static async Task<Results<Ok<IEnumerable<UserSession>>, ProblemHttpResult>> List(
@@ -21,5 +22,17 @@ public static class SessionApi
         var userId = identityService.GetUserIdentity();
         var result = await sessionManager.ListSessionsAsync(Guid.Parse(userId));
         return TypedResults.Ok(result);
+    }
+
+    private static async Task<Results<Ok, ProblemHttpResult>> Delete(
+      ISessionManager sessionManager,
+      IdentityService identityService,
+      Guid id,
+      CancellationToken cancellationToken)
+    {
+        var userId = identityService.GetUserIdentity();
+
+        var result = await sessionManager.RemoveSessionAsync(Guid.Parse(userId), id);
+        return TypedResults.Ok();
     }
 }

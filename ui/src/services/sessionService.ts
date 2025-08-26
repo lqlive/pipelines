@@ -83,14 +83,54 @@ export class SessionService {
   }
 
   /**
-   * Check if session is current session (based on recent activity)
+   * Delete a session by ID
+   * @param id Session ID to delete
+   */
+  static async deleteSession(id: string): Promise<void> {
+    try {
+      await apiClient.delete(`/api/sessions/${id}`);
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get current session token from cookies
+   */
+  static getCurrentSessionToken(): string | null {
+    // Try different possible cookie names for session token
+    const cookies = document.cookie.split(';');
+    const possibleNames = [
+      'Pipelines.Session',
+      '.AspNetCore.Cookies', 
+      'ASP.NET_SessionId',
+      'ASPXAUTH'
+    ];
+    
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      
+      // Check for exact match or starts with pattern
+      if (possibleNames.includes(name) || name.startsWith('Pipelines.Session-')) {
+        return decodeURIComponent(value);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Check if session is current session (by comparing session token)
    */
   static isCurrentSession(session: Session): boolean {
-    const lastActive = new Date(session.lastActiveAt);
-    const now = new Date();
-    const diffMins = Math.floor((now.getTime() - lastActive.getTime()) / (1000 * 60));
+    const currentToken = this.getCurrentSessionToken();
     
-    // Consider it current session if active within last 5 minutes
-    return diffMins < 5;
+    if (!currentToken) {
+      // If no token found, let the parent component handle which one is current
+      return false;
+    }
+    
+    // Compare session tokens
+    return session.sessionToken === currentToken;
   }
 }
