@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -46,25 +45,44 @@ public class DistributedTicketStore : ITicketStore
             options.SetAbsoluteExpiration(expiresUtc.Value);
         }
 
-        options.SetSlidingExpiration(TimeSpan.FromHours(1));
+        if (ticket.Properties.AllowRefresh.GetValueOrDefault(false))
+        {
+            options.SetSlidingExpiration(TimeSpan.FromMinutes(1));
+        }
 
-        var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value
-                       ?? ticket.Principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value;
 
         await _cache.SetAsync(key, ticketBytes, options);
 
-        await _sessionManager.AddSessionAsync(new UserSession
+        if (!string.IsNullOrEmpty(userIdClaim))
         {
-            SessionToken = key,
-            UserId = Guid.Parse(userIdClaim ?? string.Empty)
-        });
-
+            await _sessionManager.AddSessionAsync(new UserSession
+            {
+                Id = Guid.NewGuid(),
+                SessionToken = key,
+                UserId = Guid.Parse(userIdClaim ?? string.Empty)
+            });
+        }
         _logger.LogDebug("Ticket stored/renewed: {Key}", key);
     }
 
-    public async Task RemoveAsync(string key)
+    public Task RemoveAsync(string key)
     {
+        _logger.LogDebug("This method hasn't been implemented yet");
+        return Task.CompletedTask;
+    }
+
+    public async Task RemoveAsync(string key, HttpContext httpContext, CancellationToken cancellationToken)
+    {
+        var userIdClaim = httpContext.User?.FindFirst("sub")?.Value;
+
         await _cache.RemoveAsync(key);
+
+        if (!string.IsNullOrEmpty(userIdClaim))
+        {
+            await _sessionManager.RemoveSessionAsync(Guid.Parse(userIdClaim ?? string.Empty), key);
+        }
+
         _logger.LogDebug("Ticket removed: {Key}", key);
     }
 
