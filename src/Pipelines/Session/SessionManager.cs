@@ -170,7 +170,7 @@ public class SessionManager : ISessionManager
         }
     }
 
-    public async Task<bool> RemoveSessionAsync(Guid userId, Guid sessionId)
+    public async Task<bool> RevokeSessionAsync(Guid userId, Guid sessionId)
     {
         try
         {
