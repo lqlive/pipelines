@@ -8,7 +8,7 @@ using Pipelines.Storage.PostgreSQL.Stores;
 namespace Pipelines.Storage.PostgreSQL.Management;
 public static class PipelinesStorageBuilderExtensions
 {
-    public static PipelinesApplicationn AddPostgreSQLDatabase(this PipelinesApplicationn application)
+    public static PipelinesApplication AddPostgreSQLDatabase(this PipelinesApplication application)
     {
         var services = application.Services;
 

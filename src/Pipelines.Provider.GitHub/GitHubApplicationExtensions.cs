@@ -4,7 +4,7 @@ using Pipelines.Core;
 namespace Pipelines.Provider.GitHub;
 public static class GitHubApplicationExtensions
 {
-    public static PipelinesApplicationn AddGitHub(this PipelinesApplicationn app)
+    public static PipelinesApplication AddGitHub(this PipelinesApplication app)
     {
         app.Services.AddScoped<GitHubClientBuilder>();
 
@@ -12,8 +12,8 @@ public static class GitHubApplicationExtensions
         
         return app;
     }
-    public static PipelinesApplicationn AddGitHub(
-    this PipelinesApplicationn app,
+    public static PipelinesApplication AddGitHub(
+    this PipelinesApplication app,
     Action<GitHubRemoteOptions> configure)
     {
         app.AddGitHub();

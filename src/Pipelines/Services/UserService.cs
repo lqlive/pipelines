@@ -10,7 +10,10 @@ namespace Pipelines.Services;
 public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHasher,ILogger<UserService> logger)
 {
 
-    public async Task<ErrorOr<Success>> PatchAsync(Guid id, Patch<UserRequest> patch, CancellationToken cancellationToken)
+    public async Task<ErrorOr<Success>> PatchAsync(
+        Guid id,
+        Patch<UserRequest> patch,
+        CancellationToken cancellationToken)
     {
         var user = await userStore.GetByIdAsync(id, cancellationToken);
 
@@ -26,7 +29,10 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
 
         return Result.Success;
     }
-    public async Task<ErrorOr<UserResponse>> LoginWithAsync(LoginWithRequest request, string? ipAddress, CancellationToken cancellationToken)
+    public async Task<ErrorOr<UserResponse>> LoginWithAsync(
+        LoginWithRequest request,
+        string? ipAddress, 
+        CancellationToken cancellationToken)
     {
         var existingUser = await userStore.GetByEmailAsync(request.Email, cancellationToken);
         if (existingUser is not null)
@@ -47,8 +53,6 @@ public class UserService(IUserStore userStore, IPasswordHasher<User> passwordHas
             Email = request.Email,
             Avatar = request.Avatar,
             Status = UserStatus.Active,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
             LastLoginTime = DateTimeOffset.UtcNow,
             LastLoginIp = ipAddress,
             FailedLoginAttempts = 0

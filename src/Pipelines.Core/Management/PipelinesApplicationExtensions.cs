@@ -3,9 +3,9 @@
 namespace Pipelines.Core.Management;
 public static class PipelinesApplicationExtensions
 {
-    public static PipelinesApplicationn AddPipelinesCore(this IServiceCollection services)
+    public static PipelinesApplication AddPipelinesCore(this IServiceCollection services)
     {
-        var app = new PipelinesApplicationn(services);
+        var app = new PipelinesApplication(services);
         return app;
     }
 }
