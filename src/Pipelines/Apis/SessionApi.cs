@@ -14,6 +14,7 @@ public static class SessionApi
         api.MapDelete("/{id}", Revoke);
         return api;
     }
+
     private static async Task<Results<Ok<IEnumerable<UserSession>>, ProblemHttpResult>> List(
        ISessionManager sessionManager,
        IdentityService identityService,
