@@ -9,7 +9,9 @@ public static class RepositoryApi
         var api = app.MapGroup("api/");
 
         api.MapGet("/repositories/", List);
-        
+
+        api.MapPatch("/repositories/", List);
+
         return api;
     }
 
