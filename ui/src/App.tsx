@@ -8,7 +8,7 @@ import Repository from './pages/Repository';
 import RepositorySettings from './pages/RepositorySettings';
 import Build from './pages/Build';
 import Settings from './pages/Settings';
-import UserProfile from './pages/UserProfile';
+import UserProfile from './pages/UserSettings/UserProfile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -87,8 +87,7 @@ const AppContent: React.FC = () => {
                 <Route path="/repositories/:owner/:name/settings" element={<RepositorySettings />} />
                 <Route path="/repositories/:owner/:name/builds/:buildNumber" element={<Build />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route path="/profile" element={<UserProfile />} />
-                <Route path="/profile/:tab" element={<UserProfile />} />
+                <Route path="/profile/*" element={<UserProfile />} />
               </Routes>
             </Layout>
           </RequireAuth>
