@@ -8,9 +8,9 @@ import {
   ChevronDownIcon,
 } from '@heroicons/react/24/outline';
 import moment from 'moment';
-import BuildCard from '../components/BuildCard/BuildCard';
-import BuildStatus from '../components/BuildStatus/BuildStatus';
-import type { Repository as RepositoryType, Build } from '../types';
+import BuildCard from '../../components/BuildCard/BuildCard';
+import BuildStatus from '../../components/BuildStatus/BuildStatus';
+import type { Repository as RepositoryType, Build } from '../../types';
 
 interface RouteParams extends Record<string, string | undefined> {
   owner: string;

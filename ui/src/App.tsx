@@ -4,8 +4,8 @@ import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Repositories from './pages/Repositories';
 import ImportRepository from './pages/NewRepository';
-import Repository from './pages/Repository';
-import RepositorySettings from './pages/RepositorySettings';
+import Repository from './pages/Repositories/Repository';
+import RepositorySettings from './pages/Repositories/RepositorySettings';
 import Build from './pages/Build';
 import Settings from './pages/Settings';
 import UserProfile from './pages/UserSettings/UserProfile';
@@ -84,7 +84,7 @@ const AppContent: React.FC = () => {
                 <Route path="/repositories" element={<Repositories />} />
                 <Route path="/repositories/new" element={<ImportRepository />} />
                 <Route path="/repositories/:owner/:name" element={<Repository />} />
-                <Route path="/repositories/:owner/:name/settings" element={<RepositorySettings />} />
+                <Route path="/repositories/:owner/:name/settings/*" element={<RepositorySettings />} />
                 <Route path="/repositories/:owner/:name/builds/:buildNumber" element={<Build />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/profile/*" element={<UserProfile />} />
