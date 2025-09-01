@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   UserIcon,
   CogIcon,
   ShieldCheckIcon,
   BellIcon,
-  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Routes, Route, NavLink } from 'react-router-dom';
 import ProfileTab from './Profile';
 import AccountTab from './AccountSettings';
 import SecurityTab from './SecuritySettings';
 import NotificationTab from './NotificationSettings';
+import { useNotification } from '../../contexts/NotificationContext';
 
 interface NavTab {
   name: string;
@@ -19,7 +19,7 @@ interface NavTab {
 }
 
 const UserProfile: React.FC = () => {
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const { showNotification } = useNotification();
 
   const navTabs: NavTab[] = [
     { name: 'Profile', path: '/profile', icon: UserIcon },
@@ -28,10 +28,7 @@ const UserProfile: React.FC = () => {
     { name: 'Notifications', path: '/profile/notifications', icon: BellIcon },
   ];
 
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 5000);
-  };
+
 
   // Helper component to wrap tabs with headers
   const TabWithHeader: React.FC<{ 
@@ -135,36 +132,7 @@ const UserProfile: React.FC = () => {
         </div>
       </div>
 
-      {/* Toast Notification */}
-      {notification && (
-        <div className="fixed top-4 right-4 z-50">
-          <div className={`rounded-lg p-4 shadow-lg max-w-sm ${
-            notification.type === 'success' 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-red-50 border border-red-200'
-          }`}>
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className={`text-sm font-medium ${
-                  notification.type === 'success' ? 'text-green-800' : 'text-red-800'
-                }`}>
-                  {notification.message}
-                </p>
-              </div>
-              <button
-                onClick={() => setNotification(null)}
-                className={`ml-3 p-1 rounded-md hover:bg-opacity-20 ${
-                  notification.type === 'success' 
-                    ? 'text-green-500 hover:bg-green-500' 
-                    : 'text-red-500 hover:bg-red-500'
-                }`}
-              >
-                <XMarkIcon className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };
