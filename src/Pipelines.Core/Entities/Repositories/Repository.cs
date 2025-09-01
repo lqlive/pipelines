@@ -15,6 +15,7 @@ public class Repository
     public Guid? WebhooksId { get; set; }
     public RepositoryWebhooks? Webhooks { get; set; }
     public List<RepositoryEnvironment>? Environments { get; set; }
+    public RepositoryAccess? Access { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset UpdatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
