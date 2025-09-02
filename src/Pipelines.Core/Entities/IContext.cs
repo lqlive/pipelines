@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-
 using Pipelines.Core.Entities.Builds;
 using Pipelines.Core.Entities.Repositories;
 using Pipelines.Core.Entities.Users;

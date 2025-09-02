@@ -1,6 +1,7 @@
 ﻿using Pipelines.Services;
 using Pipelines.Session;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Pipelines.Apis;
 
@@ -18,6 +19,7 @@ public static class SessionApi
     private static async Task<Results<Ok<IEnumerable<UserSession>>, ProblemHttpResult>> List(
        ISessionManager sessionManager,
        IdentityService identityService,
+       HttpContext httpContext,
        CancellationToken cancellationToken)
     {
         var userId = identityService.GetUserIdentity();

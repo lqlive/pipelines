@@ -169,6 +169,7 @@ public static class UserApi
         };
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
         var properties = new AuthenticationProperties
         {
             IsPersistent = true,
