@@ -5,11 +5,14 @@ namespace Pipelines.Services;
 
 public class SessionService(ISessionManager sessionManager)
 {
-    public async Task<IEnumerable<UserSessionResponse>> ListAsync(Guid userId)
+    public async Task<IEnumerable<UserSessionResponse>> ListAsync(Guid userId,string sessionToken)
     {
         var sessions = await sessionManager.ListSessionsAsync(userId);
 
-        var result = sessions.Select(x => MapToResponse(x, string.Empty));
+        var result = sessions.Select(x => MapToResponse(x, sessionToken))
+            .OrderByDescending(x => x.IsCurrent)
+            .ThenByDescending(x => x.LastActiveAt);
+        
         return result;
     }
 

@@ -35,6 +35,8 @@ public class DistributedTicketStore : ITicketStore
     }
     public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
+        ticket.Properties.StoreTokens([new AuthenticationToken { Name = "session_token", Value = key }]);
+
         var ticketBytes = _ticketSerializer.Serialize(ticket);
 
         var options = new DistributedCacheEntryOptions();

@@ -2,6 +2,7 @@
 using Pipelines.Session;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Authentication;
+using Pipelines.Models.Sessions;
 
 namespace Pipelines.Apis;
 
@@ -16,14 +17,16 @@ public static class SessionApi
         return api;
     }
 
-    private static async Task<Results<Ok<IEnumerable<UserSession>>, ProblemHttpResult>> List(
-       ISessionManager sessionManager,
+    private static async Task<Results<Ok<IEnumerable<UserSessionResponse>>, ProblemHttpResult>> List(
+       SessionService sessionService,
        IdentityService identityService,
        HttpContext httpContext,
        CancellationToken cancellationToken)
     {
+        var sessionToken = await httpContext.GetTokenAsync("session_token");
         var userId = identityService.GetUserIdentity();
-        var result = await sessionManager.ListSessionsAsync(Guid.Parse(userId));
+
+        var result = await sessionService.ListAsync(Guid.Parse(userId), sessionToken ?? string.Empty);
         return TypedResults.Ok(result);
     }
 

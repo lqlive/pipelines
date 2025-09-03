@@ -53,6 +53,7 @@ builder.Services.TryAddTransient<RemoteService>();
 builder.Services.TryAddTransient<IdentityService>();
 builder.Services.TryAddTransient<RepositoryService>();
 builder.Services.TryAddTransient<BuildService>();
+builder.Services.TryAddTransient<SessionService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();

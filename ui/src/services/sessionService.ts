@@ -2,7 +2,8 @@ import { apiClient } from './api';
 export interface Session {
   id: string;
   userId: string;
-  sessionToken: string;
+  sessionToken?: string;
+  isCurrent: boolean;
   status: 'Active' | 'Inactive' | 'Expired';
   createdAt: string;
   expiresAt: string;
@@ -93,44 +94,5 @@ export class SessionService {
       console.error('Failed to delete session:', error);
       throw error;
     }
-  }
-
-  /**
-   * Get current session token from cookies
-   */
-  static getCurrentSessionToken(): string | null {
-    // Try different possible cookie names for session token
-    const cookies = document.cookie.split(';');
-    const possibleNames = [
-      'Pipelines.Session',
-      '.AspNetCore.Cookies', 
-      'ASP.NET_SessionId',
-      'ASPXAUTH'
-    ];
-    
-    for (let cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      
-      // Check for exact match or starts with pattern
-      if (possibleNames.includes(name) || name.startsWith('Pipelines.Session-')) {
-        return decodeURIComponent(value);
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Check if session is current session (by comparing session token)
-   */
-  static isCurrentSession(session: Session): boolean {
-    const currentToken = this.getCurrentSessionToken();
-    
-    if (!currentToken) {
-      // If no token found, let the parent component handle which one is current
-      return false;
-    }
-    
-    // Compare session tokens
-    return session.sessionToken === currentToken;
   }
 }

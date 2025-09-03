@@ -258,30 +258,9 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
               <div className="space-y-3">
                 {sessions.length === 0 ? (
                   <div className="text-sm text-gray-500 py-4">No active sessions found.</div>
-                ) : (() => {
-                  // Determine which session is current
-                  const currentSessions = sessions.filter(s => SessionService.isCurrentSession(s));
-                  let currentSessionId: string | null = null;
-                  
-                  if (currentSessions.length === 1) {
-                    // Perfect - one session identified as current
-                    currentSessionId = currentSessions[0].id;
-                  } else if (currentSessions.length === 0) {
-                    // No session identified - use most recently active
-                    const mostRecent = sessions.reduce((latest, current) => 
-                      new Date(current.lastActiveAt) > new Date(latest.lastActiveAt) ? current : latest
-                    );
-                    currentSessionId = mostRecent.id;
-                  } else {
-                    // Multiple sessions marked as current - use most recently active among them
-                    const mostRecentCurrent = currentSessions.reduce((latest, current) => 
-                      new Date(current.lastActiveAt) > new Date(latest.lastActiveAt) ? current : latest
-                    );
-                    currentSessionId = mostRecentCurrent.id;
-                  }
-                  
-                  return sessions.map((session) => {
-                    const isCurrentDevice = session.id === currentSessionId;
+                ) : (
+                  sessions.map((session) => {
+                    const isCurrentDevice = session.isCurrent;
                     const deviceType = SessionService.getDeviceTypeDisplay(session.deviceType);
                     const browserName = SessionService.getBrowserName(session.userAgent);
                     const lastActive = SessionService.formatLastActive(session.lastActiveAt);
@@ -331,8 +310,8 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
                         )}
                       </div>
                     );
-                  });
-                })()}
+                  })
+                )}
               </div>
             )}
           </div>
