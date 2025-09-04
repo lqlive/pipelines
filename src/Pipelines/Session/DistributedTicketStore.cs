@@ -28,11 +28,11 @@ public class DistributedTicketStore : ITicketStore
 
     public async Task<string> StoreAsync(AuthenticationTicket ticket)
     {
-        var guid = Guid.NewGuid();
-        var key = KeyPrefix + guid.ToString();
+        var key = $"{KeyPrefix}{Guid.NewGuid()}";
         await RenewAsync(key, ticket);
         return key;
     }
+
     public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
         ticket.Properties.StoreTokens([new AuthenticationToken { Name = "session_token", Value = key }]);
@@ -40,8 +40,8 @@ public class DistributedTicketStore : ITicketStore
         var ticketBytes = _ticketSerializer.Serialize(ticket);
 
         var options = new DistributedCacheEntryOptions();
-
         var expiresUtc = ticket.Properties.ExpiresUtc;
+
         if (expiresUtc.HasValue)
         {
             options.SetAbsoluteExpiration(expiresUtc.Value);
@@ -49,7 +49,7 @@ public class DistributedTicketStore : ITicketStore
 
         if (ticket.Properties.AllowRefresh.GetValueOrDefault(false))
         {
-            options.SetSlidingExpiration(TimeSpan.FromMinutes(1));
+            options.SetSlidingExpiration(TimeSpan.FromHours(1));
         }
 
         var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value;
