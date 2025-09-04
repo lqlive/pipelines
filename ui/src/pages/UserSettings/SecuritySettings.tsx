@@ -97,8 +97,8 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
     }
   };
 
-  const handleDeleteSessionRequest = (sessionId: string, browserName: string, deviceType: string) => {
-    const sessionName = `${browserName} on ${deviceType}`;
+  const handleDeleteSessionRequest = (sessionId: string, deviceName: string, deviceType: string) => {
+    const sessionName = `${deviceName} on ${deviceType}`;
     setSessionToDelete({ id: sessionId, name: sessionName });
   };
 
@@ -261,8 +261,8 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
                 ) : (
                   sessions.map((session) => {
                     const isCurrentDevice = session.isCurrent;
-                    const deviceType = SessionService.getDeviceTypeDisplay(session.deviceType);
-                    const browserName = SessionService.getBrowserName(session.userAgent);
+                    const deviceType = session.deviceType ?? 'Unknown';
+                    const deviceName = session.deviceName ?? 'Unknown';
                     const lastActive = SessionService.formatLastActive(session.lastActiveAt);
                     
                     return (
@@ -270,7 +270,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
                         <div className="flex-1">
                           <div className="flex items-center space-x-2">
                             <div className="text-sm font-medium text-gray-900">
-                              {browserName} on {deviceType}
+                              {deviceName} on {deviceType}
                             </div>
                             {isCurrentDevice && (
                               <span className="text-xs text-green-600 font-medium bg-green-100 px-2 py-1 rounded">
@@ -295,7 +295,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
                         {!isCurrentDevice && (
                           <div className="ml-4">
                             <button
-                              onClick={() => handleDeleteSessionRequest(session.id, browserName, deviceType)}
+                              onClick={() => handleDeleteSessionRequest(session.id, deviceName, deviceType)}
                               disabled={deletingSessionId === session.id}
                               className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Delete Session"

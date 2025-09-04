@@ -164,7 +164,9 @@ public static class UserApi
             new(ClaimTypes.Name, user.Name),
             new(ClaimTypes.Email, user.Email?? string.Empty),
             new(ClaimTypes.Role,"user"),
-            new("role", "user"),
+            new("devicetype",context.GetDeviceType()),
+            new("devicename",context.GetDeviceName()),
+            new("ipaddress",context.GetClientIpAddress() ?? string.Empty),
             new("sub", user.Id.ToString()),
         };
 

@@ -35,8 +35,8 @@ public class DistributedTicketStore : ITicketStore
 
     public async Task RenewAsync(string key, AuthenticationTicket ticket)
     {
-        ticket.Properties.StoreTokens([new AuthenticationToken { Name = "session_token", Value = key }]);
 
+        ticket.Properties.StoreTokens([new AuthenticationToken { Name = "session_token", Value = key }]);
         var ticketBytes = _ticketSerializer.Serialize(ticket);
 
         var options = new DistributedCacheEntryOptions();
@@ -51,20 +51,28 @@ public class DistributedTicketStore : ITicketStore
         {
             options.SetSlidingExpiration(TimeSpan.FromHours(1));
         }
+        var authenticationType = ticket.Principal.Identity?.AuthenticationType;
 
-        var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value;
-
-        await _cache.SetAsync(key, ticketBytes, options);
-
-        if (!string.IsNullOrEmpty(userIdClaim))
+        if (authenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
         {
+            var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value;
+            var deviceType = ticket.Principal?.FindFirst("devicetype")?.Value;
+            var deviceName = ticket.Principal?.FindFirst("devicename")?.Value;
+            var ipAddress = ticket.Principal?.FindFirst("ipaddress")?.Value;
+
             await _sessionManager.AddSessionAsync(new UserSession
             {
                 Id = Guid.NewGuid(),
                 SessionToken = key,
+                DeviceType = deviceType,
+                DeviceName = deviceName,
+                IpAddress = ipAddress,
                 UserId = Guid.Parse(userIdClaim ?? string.Empty)
             });
         }
+
+        await _cache.SetAsync(key, ticketBytes, options);
+     
         _logger.LogDebug("Ticket stored/renewed: {Key}", key);
     }
 
@@ -76,12 +84,13 @@ public class DistributedTicketStore : ITicketStore
 
     public async Task RemoveAsync(string key, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var userIdClaim = httpContext.User?.FindFirst("sub")?.Value;
-
         await _cache.RemoveAsync(key);
 
-        if (!string.IsNullOrEmpty(userIdClaim))
+        var authenticationType = httpContext.User?.Identity?.AuthenticationType;
+
+        if (authenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
         {
+            var userIdClaim = httpContext.User?.FindFirst("sub")?.Value;
             await _sessionManager.RemoveSessionAsync(Guid.Parse(userIdClaim ?? string.Empty), key);
         }
 

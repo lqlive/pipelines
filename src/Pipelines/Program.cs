@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pipelines.Apis;
+using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
 
 var builder = WebApplication.CreateBuilder(args);
 
