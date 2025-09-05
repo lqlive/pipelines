@@ -51,11 +51,10 @@ public class DistributedTicketStore : ITicketStore
         {
             options.SetSlidingExpiration(TimeSpan.FromHours(1));
         }
-        var authenticationType = ticket.Principal.Identity?.AuthenticationType;
+        var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value;
 
-        if (authenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
+        if (!string.IsNullOrEmpty(userIdClaim))
         {
-            var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value;
             var deviceType = ticket.Principal?.FindFirst("devicetype")?.Value;
             var deviceName = ticket.Principal?.FindFirst("devicename")?.Value;
             var ipAddress = ticket.Principal?.FindFirst("ipaddress")?.Value;
@@ -86,11 +85,9 @@ public class DistributedTicketStore : ITicketStore
     {
         await _cache.RemoveAsync(key);
 
-        var authenticationType = httpContext.User?.Identity?.AuthenticationType;
-
-        if (authenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
+        var userIdClaim = httpContext.User?.FindFirst("sub")?.Value;
+        if (!string.IsNullOrEmpty(userIdClaim))
         {
-            var userIdClaim = httpContext.User?.FindFirst("sub")?.Value;
             await _sessionManager.RemoveSessionAsync(Guid.Parse(userIdClaim ?? string.Empty), key);
         }
 

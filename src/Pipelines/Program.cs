@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pipelines.Apis;
-using Microsoft.AspNetCore.Authentication.MicrosoftAccount;
+using Pipelines.Location;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,6 +55,7 @@ builder.Services.TryAddTransient<IdentityService>();
 builder.Services.TryAddTransient<RepositoryService>();
 builder.Services.TryAddTransient<BuildService>();
 builder.Services.TryAddTransient<SessionService>();
+builder.Services.TryAddTransient<ILocationService, LocationService>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorization();
