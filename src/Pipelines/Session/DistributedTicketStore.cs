@@ -51,24 +51,6 @@ public class DistributedTicketStore : ITicketStore
         {
             options.SetSlidingExpiration(TimeSpan.FromHours(1));
         }
-        var userIdClaim = ticket.Principal?.FindFirst("sub")?.Value;
-
-        if (!string.IsNullOrEmpty(userIdClaim))
-        {
-            var deviceType = ticket.Principal?.FindFirst("devicetype")?.Value;
-            var deviceName = ticket.Principal?.FindFirst("devicename")?.Value;
-            var ipAddress = ticket.Principal?.FindFirst("ipaddress")?.Value;
-
-            await _sessionManager.AddSessionAsync(new UserSession
-            {
-                Id = Guid.NewGuid(),
-                SessionToken = key,
-                DeviceType = deviceType,
-                DeviceName = deviceName,
-                IpAddress = ipAddress,
-                UserId = Guid.Parse(userIdClaim ?? string.Empty)
-            });
-        }
 
         await _cache.SetAsync(key, ticketBytes, options);
      
@@ -85,11 +67,7 @@ public class DistributedTicketStore : ITicketStore
     {
         await _cache.RemoveAsync(key);
 
-        var userIdClaim = httpContext.User?.FindFirst("sub")?.Value;
-        if (!string.IsNullOrEmpty(userIdClaim))
-        {
-            await _sessionManager.RemoveSessionAsync(Guid.Parse(userIdClaim ?? string.Empty), key);
-        }
+    
 
         _logger.LogDebug("Ticket removed: {Key}", key);
     }

@@ -150,7 +150,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
                     type={showCurrentPassword ? 'text' : 'password'}
                     value={securityForm.currentPassword}
                     onChange={(e) => handleSecurityChange('currentPassword', e.target.value)}
-                    className="minimal-input pr-10"
+                    className="minimal-input pr-10 hide-password-toggle"
                     placeholder="Enter current password"
                   />
                   <button
@@ -175,7 +175,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
                     type={showNewPassword ? 'text' : 'password'}
                     value={securityForm.newPassword}
                     onChange={(e) => handleSecurityChange('newPassword', e.target.value)}
-                    className="minimal-input pr-10"
+                    className="minimal-input pr-10 hide-password-toggle"
                     placeholder="Enter new password"
                   />
                   <button
@@ -200,7 +200,7 @@ const SecurityTab: React.FC<SecurityTabProps> = ({ onNotification }) => {
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={securityForm.confirmPassword}
                     onChange={(e) => handleSecurityChange('confirmPassword', e.target.value)}
-                    className="minimal-input pr-10"
+                    className="minimal-input pr-10 hide-password-toggle"
                     placeholder="Confirm new password"
                   />
                   <button

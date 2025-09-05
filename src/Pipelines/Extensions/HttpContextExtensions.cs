@@ -32,6 +32,7 @@ public static class HttpContextExtensions
     {
         return context.Request.Headers["sec-ch-ua-platform"].ParseDeviceType();
     }
+
     public static string GetDeviceName(this HttpContext context)
     {
         return context.Request.Headers["sec-ch-ua"].ParseDeviceName();

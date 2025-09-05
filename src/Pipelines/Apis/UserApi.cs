@@ -1,11 +1,18 @@
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Security.Claims;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
 using Pipelines.Errors;
 using Pipelines.Extensions;
 using Pipelines.Models.Users;
 using Pipelines.Services;
+using Pipelines.Session;
 public static class UserApi
 {
     public static RouteGroupBuilder MapUserApiV1(this IEndpointRouteBuilder app)
@@ -42,6 +49,7 @@ public static class UserApi
     private static async Task<IResult> LoginWith(
         HttpContext context,
         UserService userService,
+        ISessionManager sessionManager,
         string redirectUri,
         CancellationToken cancellationToken)
     {
@@ -80,6 +88,17 @@ public static class UserApi
 
         await SignInUserAsync(context, result.Value);
 
+        var sessionToken = await context.GetTokenAsync("session_token");
+
+        await sessionManager.AddSessionAsync(new UserSession
+        {
+            Id = Guid.NewGuid(),
+            SessionToken = sessionToken ?? string.Empty,
+            DeviceType = context.GetDeviceType(),
+            DeviceName = context.GetDeviceName(),
+            IpAddress = ipAddress,
+            UserId = result.Value.Id
+        });
         return Results.Redirect(redirectUri);
     }
 
@@ -108,6 +127,7 @@ public static class UserApi
           HttpContext context,
           LoginRequest request,
           UserService userService,
+          ISessionManager sessionManager,
           CancellationToken cancellationToken)
     {
         var ipAddress = context.GetClientIpAddress();
@@ -121,6 +141,19 @@ public static class UserApi
         var userResponse = result.Value;
 
         await SignInUserAsync(context, userResponse);
+
+        var sessionToken = await context.GetTokenAsync("session_token");
+
+        await sessionManager.AddSessionAsync(new UserSession
+        {
+            Id = Guid.NewGuid(),
+            SessionToken = sessionToken ?? string.Empty,
+            DeviceType = context.GetDeviceType(),
+            DeviceName = context.GetDeviceName(),
+            IpAddress = ipAddress,
+            UserId = result.Value.Id
+        });
+
         return TypedResults.Ok();
     }
 
@@ -150,9 +183,16 @@ public static class UserApi
         return TypedResults.Ok(result.Value);
     }
 
-    private static async Task<Results<Ok, ProblemHttpResult>> Logout(HttpContext context, CancellationToken cancellationToken)
+    private static async Task<Results<Ok, ProblemHttpResult>> Logout(HttpContext context,
+        ISessionManager sessionManager,
+        CancellationToken cancellationToken)
     {
         await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+        var userIdClaim = context.User?.FindFirst("sub")?.Value;
+        var sessionToken = await context.GetTokenAsync("session_token");
+        await sessionManager.RemoveSessionAsync(Guid.Parse(userIdClaim ?? string.Empty), sessionToken ?? string.Empty);
+
         return TypedResults.Ok();
     }
 
@@ -164,9 +204,6 @@ public static class UserApi
             new(ClaimTypes.Name, user.Name),
             new(ClaimTypes.Email, user.Email?? string.Empty),
             new(ClaimTypes.Role,"user"),
-            new("devicetype",context.GetDeviceType()),
-            new("devicename",context.GetDeviceName()),
-            new("ipaddress",context.GetClientIpAddress() ?? string.Empty),
             new("sub", user.Id.ToString()),
         };
 
