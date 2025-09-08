@@ -5,7 +5,7 @@ using Pipelines.Core.Entities;
 using Pipelines.Core.Entities.Repositories;
 using Pipelines.Core.Stores;
 
-namespace Pipelines.Storage.PostgreSQL.Stores;
+namespace Pipelines.Database.PostgreSQL.Stores;
 public class RepositoryStore(IContext context) : IRepositoryStore
 {
     public async Task<bool> CreateAsync(Repository repository, CancellationToken cancellationToken)

@@ -3,4 +3,5 @@
 public class UserRequest
 {
     public string? Avatar { get; set; }
+
 }

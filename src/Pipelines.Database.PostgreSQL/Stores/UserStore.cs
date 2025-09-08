@@ -3,7 +3,7 @@ using Pipelines.Core.Entities;
 using Pipelines.Core.Entities.Users;
 using Pipelines.Core.Stores;
 
-namespace Pipelines.Storage.PostgreSQL.Stores;
+namespace Pipelines.Database.PostgreSQL.Stores;
 public class UserStore(IContext context) : IUserStore
 {
     public async Task<bool> CreateAsync(User user, CancellationToken cancellationToken)

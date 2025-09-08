@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Pipelines.Core.Entities;
 
-namespace Pipelines.Storage.PostgreSQL;
+namespace Pipelines.Database.PostgreSQL;
 public class PostgreSQLContext : AbstractContext<PostgreSQLContext>
 {
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

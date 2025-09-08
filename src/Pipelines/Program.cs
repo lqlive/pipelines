@@ -4,7 +4,7 @@ using Pipelines.Core.Management;
 using Pipelines.Provider.GitHub;
 using Pipelines.Services.Remotes;
 using Pipelines.Session;
-using Pipelines.Storage.PostgreSQL.Management;
+using Pipelines.Database.PostgreSQL.Management;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Pipelines.Services;
 using Microsoft.Extensions.Options;

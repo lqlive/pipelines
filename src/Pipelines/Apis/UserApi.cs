@@ -1,13 +1,7 @@
-using System.Net.Http;
-using System.Net.Sockets;
 using System.Security.Claims;
-
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-
 using Pipelines.Errors;
 using Pipelines.Extensions;
 using Pipelines.Models.Users;
@@ -64,7 +58,6 @@ public static class UserApi
                    ?? context.User.Identity?.Name;
         var avatar = context.User.FindFirst("picture")?.Value
                      ?? context.User.FindFirst("avatar_url")?.Value;
-
 
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(name))
         {

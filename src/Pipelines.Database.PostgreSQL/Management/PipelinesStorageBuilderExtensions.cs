@@ -3,9 +3,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pipelines.Core;
 using Pipelines.Core.Entities;
 using Pipelines.Core.Stores;
-using Pipelines.Storage.PostgreSQL.Stores;
+using Pipelines.Database.PostgreSQL.Stores;
 
-namespace Pipelines.Storage.PostgreSQL.Management;
+namespace Pipelines.Database.PostgreSQL.Management;
 public static class PipelinesStorageBuilderExtensions
 {
     public static PipelinesApplication AddPostgreSQLDatabase(this PipelinesApplication application)
