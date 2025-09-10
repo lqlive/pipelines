@@ -6,7 +6,7 @@ using Pipelines.Core.Stores;
 using Pipelines.Database.PostgreSQL.Stores;
 
 namespace Pipelines.Database.PostgreSQL.Management;
-public static class PipelinesStorageBuilderExtensions
+public static class PipelinesDatabaseBuilderExtensions
 {
     public static PipelinesApplication AddPostgreSQLDatabase(this PipelinesApplication application)
     {

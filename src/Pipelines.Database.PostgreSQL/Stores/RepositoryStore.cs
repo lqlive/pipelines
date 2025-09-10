@@ -1,5 +1,4 @@
 ﻿using System.Data.Common;
-
 using Microsoft.EntityFrameworkCore;
 using Pipelines.Core.Entities;
 using Pipelines.Core.Entities.Repositories;
