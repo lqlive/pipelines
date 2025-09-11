@@ -20,5 +20,6 @@
      <PackageVersion Include="Grpc.Core.Api" Version="2.70.0" />
      <PackageVersion Include="Google.Protobuf" Version="3.27.2" />
 	 <PackageVersion Include="MaxMind.GeoIP2"  Version="5.3.0" />
+	 <PackageVersion Include="Minio"  Version="6.0.5" />
   </ItemGroup>
 </Project>

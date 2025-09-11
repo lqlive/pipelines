@@ -176,6 +176,7 @@ public static class UserApi
         return TypedResults.Ok(result.Value);
     }
 
+
     private static async Task<Results<Ok, ProblemHttpResult>> Logout(HttpContext context,
         ISessionManager sessionManager,
         CancellationToken cancellationToken)

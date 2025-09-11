@@ -100,5 +100,6 @@ app.MapRemoteApiV1();
 app.MapBuildApi();
 app.MapRepositoryApiV1();
 app.MapSessionApiV1();
+app.MapUploadApiV1();
 
 app.Run();
