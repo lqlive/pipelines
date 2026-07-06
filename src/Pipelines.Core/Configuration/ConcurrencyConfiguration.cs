@@ -1,4 +1,4 @@
-namespace Pipelines.Core.Configuration;
+﻿namespace Pipelines.Core.Configuration;
 
 public class ConcurrencyConfiguration
 {

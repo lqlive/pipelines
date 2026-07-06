@@ -1,15 +1,9 @@
 <Solution>
-  <Folder Name="/Solution Items/">
-    <File Path="Directory.Build.props" />
-    <File Path="Directory.Packages.props" />
-  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Pipelines.Core/Pipelines.Core.csproj" />
-    <Project Path="src/Pipelines.Database.PostgreSQL/Pipelines.Database.PostgreSQL.csproj" />
-    <Project Path="src/Pipelines.Provider.GitHub/Pipelines.Provider.GitHub.csproj" />
-    <Project Path="src/Pipelines.Runner.Docker/Pipelines.Runner.Docker.csproj" />
-    <Project Path="src/Pipelines.Runner.Listener/Pipelines.Runner.Listener.csproj" />
-    <Project Path="src/Pipelines.Storage.Minio/Pipelines.Storage.Minio.csproj" />
-    <Project Path="src/Pipelines/Pipelines.csproj" />
+    <Project Path="src/Pipelines.Runner.Docker/Pipelines.Runner.Docker.csproj" Id="7eed6052-8117-41c9-9188-96f1b6d667e3" />
+    <Project Path="src/Pipelines.Runner.Listener/Pipelines.Runner.Listener.csproj" Id="382cd62c-9a1f-4ac3-bda2-4e5742669d07" />
+    <Project Path="src/Pipelines.Runner.Worker/Pipelines.Runner.Worker.csproj" Id="0c5e2e7d-c961-4ef6-ae3f-b4011f44280a" />
+    <Project Path="src/Pipelines/Pipelines.csproj" Id="8de17259-b70a-4486-af92-a7f6b5c366ec" />
   </Folder>
 </Solution>

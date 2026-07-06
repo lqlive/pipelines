@@ -6,7 +6,6 @@ public class PipelineConfiguration
     public string Type { get; set; } = "docker";
     public string Name { get; set; } = string.Empty;
     public string Version { get; set; } = "1.0";
-
     public PlatformConfiguration Platform { get; set; } = new();
     public WorkspaceConfiguration Workspace { get; set; } = new();
     public CloneConfiguration Clone { get; set; } = new();
