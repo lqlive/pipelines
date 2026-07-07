@@ -89,11 +89,13 @@ public sealed class DockerStepExecutor : IStepExecutor
 
         var volumes = new List<DockerVolumeMount>();
 
-        if (!string.IsNullOrWhiteSpace(context.WorkspacePath))
+        var workspacePath = PrepareWorkspacePath(context.WorkspacePath);
+
+        if (workspacePath is not null)
         {
             volumes.Add(new DockerVolumeMount
             {
-                Source = context.WorkspacePath,
+                Source = workspacePath,
                 Target = workingDirectory,
                 ReadOnly = false,
                 Type = DockerVolumeMountType.Bind
@@ -239,6 +241,20 @@ public sealed class DockerStepExecutor : IStepExecutor
             Duration = duration
         };
     }
+
+    private static string? PrepareWorkspacePath(string workspacePath)
+    {
+        if (string.IsNullOrWhiteSpace(workspacePath))
+        {
+            return null;
+        }
+
+        var fullPath = Path.GetFullPath(workspacePath);
+        Directory.CreateDirectory(fullPath);
+
+        return fullPath;
+    }
+
 
     private static string CreateContainerName(Guid taskId, string stepName)
     {
