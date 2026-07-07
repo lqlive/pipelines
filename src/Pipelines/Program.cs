@@ -7,6 +7,7 @@ using Pipelines.Core.Stores;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<ITaskStore, InMemoryTaskStore>();
+builder.Services.AddSingleton<IRunnerSelector, RunnerSelector>();
 builder.Services.AddSingleton<ITaskBroker, TaskBroker>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {

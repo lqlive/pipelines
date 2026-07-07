@@ -9,9 +9,14 @@ namespace Pipelines;
 public sealed class TaskBroker : ITaskBroker
 {
     private readonly ITaskStore _store;
-    public TaskBroker(ITaskStore store)
+    private readonly IRunnerSelector _runnerSelector;
+
+    public TaskBroker(
+        ITaskStore store,
+        IRunnerSelector runnerSelector)
     {
         _store = store;
+        _runnerSelector = runnerSelector;
     }
     public async Task<Guid> EnqueueAsync(
         PipelineConfiguration pipeline,
@@ -35,7 +40,8 @@ public sealed class TaskBroker : ITaskBroker
     {
         await RequeueExpiredLeasesAsync(cancellationToken);
         var pendingTasks = await _store.GetPendingAsync(cancellationToken);
-        var task = pendingTasks.FirstOrDefault();
+        var task = pendingTasks.FirstOrDefault(task =>
+            _runnerSelector.Matches(task.Pipeline, profile));
         if (task is null)
         {
             return null;
