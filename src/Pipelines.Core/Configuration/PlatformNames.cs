@@ -23,15 +23,15 @@ public static class PlatformNames
 
     public static string Os(string value)
     {
-        return Resolve(value, OsAliases);
+        return CanonicalName(value, OsAliases);
     }
 
     public static string Architecture(string value)
     {
-        return Resolve(value, ArchitectureAliases);
+        return CanonicalName(value, ArchitectureAliases);
     }
 
-    private static string Resolve(
+    private static string CanonicalName(
         string value,
         IReadOnlyDictionary<string, string> aliases)
     {

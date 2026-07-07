@@ -1,31 +1,30 @@
-﻿using Docker.DotNet;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Pipelines.Core.Abstractions;
 using Pipelines.Core.Models;
-using Pipelines.Runner.Docker;
-using Pipelines.Runner.Docker.Container;
 using Pipelines.Runner.Listener;
+using Pipelines.Runner.Workstation;
 using Pipelines.Runner.Worker;
-using System.Runtime.InteropServices;
 
 
 var builder = Host.CreateApplicationBuilder(args);
 var runnerId = Guid.NewGuid();
 var serverUrl = "http://localhost:5011";
+var runnerOs = "windows";
+var runnerArch = "amd64";
 
 builder.Services.AddSingleton(new RunnerProfile
 {
     RunnerId = runnerId,
-    Type = "docker",
-    Os = RuntimeInformation.OSDescription,
-    Architecture = RuntimeInformation.OSArchitecture.ToString(),
+    Type = "workstation",
+    Os = runnerOs,
+    Architecture = runnerArch,
     Capacity = 1,
     Labels = new Dictionary<string, string>
     {
-        ["runner.type"] = "docker",
-        ["runner.os"] = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux",
-        ["runner.arch"] = RuntimeInformation.OSArchitecture.ToString().ToLowerInvariant()
+        ["runner.type"] = "workstation",
+        ["runner.os"] = runnerOs,
+        ["runner.arch"] = runnerArch
     }
 });
 
@@ -39,15 +38,7 @@ builder.Services.AddHttpClient<RunnerNodeSession>(client =>
 });
 builder.Services.AddSingleton<IPipelineRunner, PipelineRunner>();
 builder.Services.AddSingleton<IStepRunner, StepRunner>();
-builder.Services.AddSingleton<IStepExecutor, DockerStepExecutor>();
-builder.Services.AddSingleton<IDockerClient>(_ =>
-{
-    var dockerUri = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-        ? "npipe://./pipe/docker_engine"
-        : "unix:///var/run/docker.sock";
-    return new DockerClientConfiguration(new Uri(dockerUri)).CreateClient();
-});
-builder.Services.AddSingleton<IDockerManager, DockerManager>();
+builder.Services.AddSingleton<IStepExecutor, WorkstationStepExecutor>();
 builder.Services.AddSingleton<ITaskDispatcher, TaskDispatcher>();
 builder.Services.AddHostedService(serviceProvider =>
     serviceProvider.GetRequiredService<RunnerNodeSession>());

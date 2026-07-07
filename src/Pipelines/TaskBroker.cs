@@ -33,6 +33,14 @@ public sealed class TaskBroker : ITaskBroker
         await _store.EnqueueAsync(task, cancellationToken);
         return task.TaskId;
     }
+
+    public async Task<IReadOnlyList<TaskRecord>> ListAsync(
+        CancellationToken cancellationToken = default)
+    {
+        await RequeueExpiredLeasesAsync(cancellationToken);
+        return await _store.ListAsync(cancellationToken);
+    }
+
     public async Task<AcquiredTask?> TryAcquireAsync(
         RunnerProfile profile,
         TimeSpan leaseDuration,

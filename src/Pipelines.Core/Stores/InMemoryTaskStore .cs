@@ -15,6 +15,16 @@ public sealed class InMemoryTaskStore : ITaskStore
         return Task.CompletedTask;
     }
 
+    public Task<IReadOnlyList<TaskRecord>> ListAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var tasks = _tasks.Values
+            .OrderBy(task => task.CreatedAt)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<TaskRecord>>(tasks);
+    }
+
     public Task<IReadOnlyList<TaskRecord>> GetPendingAsync(
         CancellationToken cancellationToken = default)
     {

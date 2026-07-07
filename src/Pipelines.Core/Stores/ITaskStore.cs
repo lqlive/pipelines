@@ -7,6 +7,8 @@ public interface ITaskStore
 {
     Task EnqueueAsync(TaskRecord task, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<TaskRecord>> ListAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<TaskRecord>> GetPendingAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<TaskRecord>> GetLeasedAsync(CancellationToken cancellationToken = default);

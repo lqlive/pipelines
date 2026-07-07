@@ -1,4 +1,5 @@
 ﻿using Pipelines.Core.Configuration;
+using Pipelines.Core.Entities;
 using Pipelines.Core.Models;
 
 namespace Pipelines.Abstractions;
@@ -9,6 +10,9 @@ public interface ITaskBroker
         PipelineConfiguration pipeline,
         string workspacePath,
         Dictionary<string, string> variables,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<TaskRecord>> ListAsync(
         CancellationToken cancellationToken = default);
 
     Task<AcquiredTask?> TryAcquireAsync(

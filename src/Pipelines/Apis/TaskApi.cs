@@ -10,6 +10,14 @@ public static class TaskApi
     {
         var group = routes.MapGroup("/tasks");
 
+        group.MapGet("/", async (
+            ITaskBroker broker,
+            CancellationToken cancellationToken) =>
+        {
+            var tasks = await broker.ListAsync(cancellationToken);
+            return Results.Ok(tasks);
+        });
+
         group.MapPost("/enqueue", async (
             EnqueueTaskRequest request,
             ITaskBroker broker,

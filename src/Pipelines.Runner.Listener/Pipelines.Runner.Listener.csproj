@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Pipelines.Runner.Docker\Pipelines.Runner.Docker.csproj" />
     <ProjectReference Include="..\Pipelines.Runner.Worker\Pipelines.Runner.Worker.csproj" />
+    <ProjectReference Include="..\Pipelines.Runner.Workstation\Pipelines.Runner.Workstation.csproj" />
   </ItemGroup>
 
 </Project>
