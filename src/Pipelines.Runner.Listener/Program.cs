@@ -33,6 +33,10 @@ builder.Services.AddHttpClient<ITaskQueue, TaskBrokerClient>(client =>
 {
     client.BaseAddress = new Uri(serverUrl);
 });
+builder.Services.AddHttpClient<RunnerNodeSession>(client =>
+{
+    client.BaseAddress = new Uri(serverUrl);
+});
 builder.Services.AddSingleton<IPipelineRunner, PipelineRunner>();
 builder.Services.AddSingleton<IStepRunner, StepRunner>();
 builder.Services.AddSingleton<IStepExecutor, DockerStepExecutor>();
@@ -45,8 +49,19 @@ builder.Services.AddSingleton<IDockerClient>(_ =>
 });
 builder.Services.AddSingleton<IDockerManager, DockerManager>();
 builder.Services.AddSingleton<ITaskDispatcher, TaskDispatcher>();
+builder.Services.AddHostedService(serviceProvider =>
+    serviceProvider.GetRequiredService<RunnerNodeSession>());
 
 var host = builder.Build();
 
-var dispatcher = host.Services.GetRequiredService<ITaskDispatcher>();
-await dispatcher.RunAsync();
+await host.StartAsync();
+
+try
+{
+    var dispatcher = host.Services.GetRequiredService<ITaskDispatcher>();
+    await dispatcher.RunAsync();
+}
+finally
+{
+    await host.StopAsync();
+}

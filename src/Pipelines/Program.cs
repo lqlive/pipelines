@@ -7,7 +7,9 @@ using Pipelines.Core.Stores;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<ITaskStore, InMemoryTaskStore>();
+builder.Services.AddSingleton<IRunnerStore, InMemoryRunnerStore>();
 builder.Services.AddSingleton<IRunnerSelector, RunnerSelector>();
+builder.Services.AddSingleton<IRunnerRegistry, RunnerRegistry>();
 builder.Services.AddSingleton<ITaskBroker, TaskBroker>();
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -16,6 +18,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 var app = builder.Build();
 
 app.MapTasks();
+app.MapRunners();
 app.MapWebhooks();
 
 await app.RunAsync();

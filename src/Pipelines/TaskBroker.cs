@@ -39,6 +39,12 @@ public sealed class TaskBroker : ITaskBroker
         CancellationToken cancellationToken = default)
     {
         await RequeueExpiredLeasesAsync(cancellationToken);
+
+        if (await IsAtCapacityAsync(profile, cancellationToken))
+        {
+            return null;
+        }
+
         var pendingTasks = await _store.GetPendingAsync(cancellationToken);
         var task = pendingTasks.FirstOrDefault(task =>
             _runnerSelector.Matches(task.Pipeline, profile));
@@ -104,6 +110,17 @@ public sealed class TaskBroker : ITaskBroker
 
         await _store.CompleteAsync(taskId, result, cancellationToken);
         return true;
+    }
+
+    private async Task<bool> IsAtCapacityAsync(
+        RunnerProfile profile,
+        CancellationToken cancellationToken)
+    {
+        var capacity = Math.Max(1, profile.Capacity);
+        var leasedTasks = await _store.GetLeasedAsync(cancellationToken);
+        var activeTasks = leasedTasks.Count(task => task.RunnerId == profile.RunnerId);
+
+        return activeTasks >= capacity;
     }
 
     private async Task RequeueExpiredLeasesAsync(
