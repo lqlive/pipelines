@@ -51,6 +51,18 @@ public static class RunnerApi
             return Results.Ok(runner);
         });
 
+        group.MapPost("/{runnerId:guid}/offline", async (
+            Guid runnerId,
+            IRunnerRegistry registry,
+            CancellationToken cancellationToken) =>
+        {
+            var updated = await registry.OfflineAsync(runnerId, cancellationToken);
+
+            return updated
+                ? Results.NoContent()
+                : Results.NotFound();
+        });
+
         return routes;
     }
 

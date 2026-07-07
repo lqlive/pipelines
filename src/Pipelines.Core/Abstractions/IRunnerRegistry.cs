@@ -15,6 +15,10 @@ public interface IRunnerRegistry
         TimeSpan heartbeatTimeout,
         CancellationToken cancellationToken = default);
 
+    Task<bool> OfflineAsync(
+        Guid runnerId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<RunnerRecord>> ListAsync(
         CancellationToken cancellationToken = default);
 }

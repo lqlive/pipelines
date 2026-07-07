@@ -31,7 +31,7 @@ public sealed class RunnerRegistry : IRunnerRegistry
         runner.Profile = profile;
         runner.Status = RunnerStatus.Online;
         runner.LastSeenAt = now;
-        runner.ExpiresAt = now.Add(heartbeatTimeout);
+        runner.OnlineUntil = now.Add(heartbeatTimeout);
 
         await _store.UpsertAsync(runner, cancellationToken);
         return runner;
@@ -45,6 +45,26 @@ public sealed class RunnerRegistry : IRunnerRegistry
         return RegisterAsync(profile, heartbeatTimeout, cancellationToken);
     }
 
+    public async Task<bool> OfflineAsync(
+        Guid runnerId,
+        CancellationToken cancellationToken = default)
+    {
+        var runner = await _store.GetAsync(runnerId, cancellationToken);
+
+        if (runner is null)
+        {
+            return false;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        runner.Status = RunnerStatus.Offline;
+        runner.OnlineUntil = now;
+        runner.LastSeenAt = now;
+
+        await _store.UpsertAsync(runner, cancellationToken);
+        return true;
+    }
+
     public async Task<IReadOnlyList<RunnerRecord>> ListAsync(
         CancellationToken cancellationToken = default)
     {
@@ -53,7 +73,7 @@ public sealed class RunnerRegistry : IRunnerRegistry
 
         foreach (var runner in runners)
         {
-            var status = runner.ExpiresAt > now
+            var status = runner.OnlineUntil > now
                 ? RunnerStatus.Online
                 : RunnerStatus.Offline;
 

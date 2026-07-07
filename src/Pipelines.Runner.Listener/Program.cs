@@ -59,7 +59,12 @@ await host.StartAsync();
 try
 {
     var dispatcher = host.Services.GetRequiredService<ITaskDispatcher>();
-    await dispatcher.RunAsync();
+    var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+
+    await dispatcher.RunAsync(lifetime.ApplicationStopping);
+}
+catch (OperationCanceledException)
+{
 }
 finally
 {

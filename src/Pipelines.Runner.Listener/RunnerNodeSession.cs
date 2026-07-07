@@ -64,6 +64,8 @@ public sealed class RunnerNodeSession : IHostedService
         {
             _sessionCts.Dispose();
         }
+
+        await OfflineAsync(cancellationToken);
     }
 
     private async Task RunAsync(CancellationToken cancellationToken)
@@ -107,6 +109,27 @@ public sealed class RunnerNodeSession : IHostedService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to renew runner session {RunnerId}.", _profile.RunnerId);
+        }
+    }
+
+    private async Task OfflineAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var response = await _httpClient.PostAsync(
+                $"/runners/{_profile.RunnerId}/offline",
+                content: null,
+                cancellationToken);
+
+            response.EnsureSuccessStatusCode();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to close runner session {RunnerId}.", _profile.RunnerId);
         }
     }
 
