@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Pipelines.Core\Pipelines.Core.csproj" />
+  </ItemGroup>
+
 </Project>
